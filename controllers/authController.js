@@ -1,21 +1,19 @@
 //import dependencies
 const bcrypt = require('bcrypt');//password
 const jwt = require('jsonwebtoken');//token for login
-const {msnodesqlv8} = require('../config/db')
+const { msnodesqlv8 } = require('../config/db')
 require("dotenv").config();
 
-const { error} = require("node:console")
-
-
+const { error } = require("node:console")
 
 const login = async (req, res) => {
-    try{
+    try {
         //get login data
-        const {username, password} = req.body;
+        const { username, password } = req.body;
         console.log(username, password)
 
         //check fields
-        if(!username || !password){
+        if (!username || !password) {
             return res.status(400).json({
                 status: 400,
                 errorMessage: "username and password are required"
@@ -23,7 +21,7 @@ const login = async (req, res) => {
         }
 
         // check user in DB
-        const result = await  msnodesqlv8.query`
+        const result = await msnodesqlv8.query`
             Select * From Users Where Username = ${username}
         `;
 
@@ -78,7 +76,7 @@ const login = async (req, res) => {
                 id: user.Id,
                 username: user.Username
             },
-            token:token
+            token: token
         });
     } catch (error) {
         console.error(error);
@@ -92,20 +90,69 @@ const login = async (req, res) => {
 
 const logout = async (req, res) => {
     //destroy cookie
-    try{
+    try {
         res.clearCookie('token');
         res.status(200).json({
             status: 200,
             message: "Logged out successfuly"
         })
 
-    } catch(error){
+    } catch (error) {
         console.error(error)
     }
 }
 
+const register = async (req, res) => {
+    try {
+        //get data from body
+        const { name, username, password } = req.body;
+
+        //validate data
+        if (!name || !username || !password) {
+            //display
+            return res.status(400).json({
+                status: 400,
+                errorMessage: "Empty fields, all fields are required."
+            })
+        }
+        //check if username already exists in db
+        const existingUser = await sql.query`
+        SELECT * FROM Users WHERE username = ${username}`;
+
+        if (existingUser.recordset.length > 0) {
+            //conflict
+            return res.status(409).json({
+                status: 409,
+                errorMessage: "Username already exists."
+            });
+        }
+
+        //ecnrypt pwd
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        //insert user
+        await sql.query`
+            INSERT INTO Users (Name, username, PasswordHash) Values (${name}, ${username}, ${hashedPassword})
+        `;
+
+        //response
+        //201 created
+        res.status(201).json({
+            status: 201,
+            message: "User Added Succesfully."
+        });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            status: 500,
+            errorMessage: "Internal Server Error."
+        })
+    }
+}
 
 module.exports = {
     login,
-    logout
+    logout,
+    register
 };
