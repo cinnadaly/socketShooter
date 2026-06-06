@@ -25,7 +25,7 @@ app.use(express.static("public"));
 
 app.get('/', (req, res) => {
     // __dirname is the directory of the current script
-    res.sendFile(path.join(__dirname, 'index.html'));
+    res.sendFile(path.join(__dirname, 'public/login.html'));
 });
 
 app.get('/game', (req, res) => {
