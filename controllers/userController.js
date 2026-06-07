@@ -1,18 +1,19 @@
 //import dependencies
 const bcrypt = require('bcrypt');//password
 const jwt = require('jsonwebtoken');//token for login
-const {msnodesqlv8} = require('../config/db')
+const { msnodesqlv8 } = require('../config/db')
+const { sql } = require('../config/db');
 
-const { error} = require("node:console")
+const { error } = require("node:console")
 
 // Add User
-const registerUser = async (req,res) => {
-    try{
+const registerUser = async (req, res) => {
+    try {
         // Get data from BODY
         const { username, password } = req.body;
 
         // validate data
-        if (!username || !password ) {
+        if (!username || !password) {
 
             // display
             return res.status(400).json({
@@ -38,7 +39,7 @@ const registerUser = async (req,res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
 
         //INsert user
-        await msnodesqlv8.query `
+        await msnodesqlv8.query`
             Insert Into Users (Username, PasswordHash) Values (${username}, ${hashedPassword})
         `;
 
@@ -46,21 +47,21 @@ const registerUser = async (req,res) => {
         //status = 201 Created
         res.status(201).json({
             status: 201,
-            message:"Inserted succesfully"
+            message: "Inserted succesfully"
         });
 
-    } catch(error){
+    } catch (error) {
         console.error(error);
 
         res.status(500).json({
             status: 500,
-            message:"Internal server error"
+            message: "Internal server error"
         })
     }
 }
 
 const getAllUser = async (req, res) => {
-    try{
+    try {
         // Check if email already exists
         const userList = await msnodesqlv8.query`
             Select * From Users ORDER BY ID
@@ -78,22 +79,22 @@ const getAllUser = async (req, res) => {
         //status = 201 Created
         res.status(200).json({
             status: 200,
-            message:"Success",
+            message: "Success",
             data: userList.recordset
         });
 
-    } catch(error){
+    } catch (error) {
         console.error(error);
 
         res.status(500).json({
             status: 500,
-            message:"Internal server error"
+            message: "Internal server error"
         })
     }
 }
 
-const getUserById = async (req,res) => {
-    try{
+const getUserById = async (req, res) => {
+    try {
         const userId = req.params.id;
 
         // Check if email already exists
@@ -101,7 +102,7 @@ const getUserById = async (req,res) => {
             Select * From Users where Id = ${userId}
         `;
 
-        if (userById.recordset.length < 1){
+        if (userById.recordset.length < 1) {
             // Conflict
             return res.status(404).json({
                 status: 404,
@@ -113,22 +114,22 @@ const getUserById = async (req,res) => {
         //status = 201 Created
         res.status(200).json({
             status: 200,
-            message:"Success",
+            message: "Success",
             data: userById.recordset
         });
 
-    } catch(error){
+    } catch (error) {
         console.error(error);
 
         res.status(500).json({
             status: 500,
-            message:"Internal server error"
+            message: "Internal server error"
         })
     }
 }
 
-const deleteUser = async (req,res) => {
-    try{
+const deleteUser = async (req, res) => {
+    try {
         const userId = req.params.id;
 
         // Check if email already exists
@@ -136,7 +137,7 @@ const deleteUser = async (req,res) => {
             Delete From Users where Id = ${userId}
         `;
 
-        if (!response){
+        if (!response) {
             // Conflict
             return res.status(500).json({
                 status: 500,
@@ -148,15 +149,15 @@ const deleteUser = async (req,res) => {
         //status = 201 Created
         res.status(200).json({
             status: 200,
-            message:"User deleted successfuly",
+            message: "User deleted successfuly",
         });
 
-    } catch(error){
+    } catch (error) {
         console.error(error);
 
         res.status(500).json({
             status: 500,
-            message:"Internal server error"
+            message: "Internal server error"
         })
     }
 }
@@ -166,5 +167,5 @@ module.exports = {
     getAllUser,
     getUserById,
     deleteUser
-    
+
 }

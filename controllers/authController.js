@@ -2,6 +2,7 @@
 const bcrypt = require('bcrypt');//password
 const jwt = require('jsonwebtoken');//token for login
 const { msnodesqlv8 } = require('../config/db')
+const { sql } = require('../config/db');
 require("dotenv").config();
 
 const { error } = require("node:console")
@@ -105,10 +106,10 @@ const logout = async (req, res) => {
 const register = async (req, res) => {
     try {
         //get data from body
-        const { name, username, password } = req.body;
+        const { username, password } = req.body;
 
         //validate data
-        if (!name || !username || !password) {
+        if (!username || !password) {
             //display
             return res.status(400).json({
                 status: 400,
@@ -132,7 +133,7 @@ const register = async (req, res) => {
 
         //insert user
         await sql.query`
-            INSERT INTO Users (Name, username, PasswordHash) Values (${name}, ${username}, ${hashedPassword})
+            INSERT INTO Users (Username, PasswordHash) Values (${username}, ${hashedPassword})
         `;
 
         //response
