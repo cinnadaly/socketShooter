@@ -2,7 +2,6 @@
 const bcrypt = require('bcrypt');//password
 const jwt = require('jsonwebtoken');//token for login
 const { msnodesqlv8 } = require('../config/db')
-const { sql } = require('../config/db');
 
 const { error } = require("node:console")
 

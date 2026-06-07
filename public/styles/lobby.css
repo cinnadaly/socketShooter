@@ -1,0 +1,30 @@
+.clients_container{
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content:center;
+    align-items: center;
+}
+
+.st_client_status{
+    background-color: rgb(42, 102, 242);
+    color: #fff;
+    font-weight: bold;
+    padding:15px
+}
+.nd_client_status{
+    background-color: rgb(203, 74, 96);
+    color: #fff;
+    font-weight: bold;
+    padding:15px
+}
+.st_client_name{
+    color: #fff;
+    font-weight: bold;
+    padding:15px
+}
+.nd_client_name{
+    color: #fff;
+    font-weight: bold;
+    padding:15px
+}

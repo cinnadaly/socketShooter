@@ -40,7 +40,7 @@ app.get('/profile', (req, res) => {
 
 app.get('/register', (req, res) => {
     // __dirname is the directory of the current script
-    res.sendFile(path.join(__dirname, 'public/register.html'));
+    res.sendFile(path.join(__dirname, '/public/register.html'));
 });
 
 

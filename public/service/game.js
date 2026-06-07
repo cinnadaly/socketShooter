@@ -11,6 +11,7 @@ const config = {
 
 new Phaser.Game(config);
 
+
 let jugador;
 
 let cursores;
@@ -51,6 +52,14 @@ function create() {
         Phaser.Input.Keyboard.KeyCodes.ENTER
     );
 
+    right = this.input.keyboard.addKey(
+        Phaser.Input.Keyboard.KeyCodes.D
+    );
+
+    left = this.input.keyboard.addKey(
+        Phaser.Input.Keyboard.KeyCodes.A
+    );
+
     scoreText = this.add.text(
         10,
         10,
@@ -76,18 +85,17 @@ function update() {
 
         return;
     }
-
-    if(cursores.left.isDown && jugador.x > 25) {
+    if(left.isDown && jugador.x > 25) {
         jugador.x -= 6;
     }
 
-    if(cursores.right.isDown && jugador.x < 475) {
+    if(right.isDown && jugador.x < 475) {
         jugador.x += 6;
     }
 
     if(
         Phaser.Input.Keyboard.JustDown(
-            espacio
+            enter
         )
     ) {
 

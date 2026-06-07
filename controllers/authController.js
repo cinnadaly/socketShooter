@@ -2,7 +2,6 @@
 const bcrypt = require('bcrypt');//password
 const jwt = require('jsonwebtoken');//token for login
 const { msnodesqlv8 } = require('../config/db')
-const { sql } = require('../config/db');
 require("dotenv").config();
 
 const { error } = require("node:console")
@@ -103,57 +102,9 @@ const logout = async (req, res) => {
     }
 }
 
-const register = async (req, res) => {
-    try {
-        //get data from body
-        const { username, password } = req.body;
-
-        //validate data
-        if (!username || !password) {
-            //display
-            return res.status(400).json({
-                status: 400,
-                errorMessage: "Empty fields, all fields are required."
-            })
-        }
-        //check if username already exists in db
-        const existingUser = await sql.query`
-        SELECT * FROM Users WHERE username = ${username}`;
-
-        if (existingUser.recordset.length > 0) {
-            //conflict
-            return res.status(409).json({
-                status: 409,
-                errorMessage: "Username already exists."
-            });
-        }
-
-        //ecnrypt pwd
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        //insert user
-        await sql.query`
-            INSERT INTO Users (Username, PasswordHash) Values (${username}, ${hashedPassword})
-        `;
-
-        //response
-        //201 created
-        res.status(201).json({
-            status: 201,
-            message: "User Added Succesfully."
-        });
-
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({
-            status: 500,
-            errorMessage: "Internal Server Error."
-        })
-    }
-}
 
 module.exports = {
     login,
-    logout,
-    register
+    logout
+    
 };

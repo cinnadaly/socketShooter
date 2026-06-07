@@ -1,8 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
+    const BASE_URL = "http://localhost:3000/api/auth/";
 
-    const BASE_URL = "http://localhost:3000/api/";
-
-    const form = document.getElementById("registerForm");
+    const form = document.getElementById("loginForm");
 
     form.addEventListener("submit", async (e) => {
         e.preventDefault();
@@ -12,7 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         try {
 
-            const response = await fetch(`${BASE_URL}register`, {
+            const response = await fetch(`${BASE_URL}login`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -26,12 +25,12 @@ document.addEventListener("DOMContentLoaded", () => {
             const data = await response.json();
 
             if (response.ok) {
-                alert(data.message);
+                console.log("logged in")
 
                 form.reset();
 
                 // login rdirect
-                window.location.href = "/login.html";
+                window.location.href = "/game.html";
             }
             else {
                 alert(data.errorMessage);
