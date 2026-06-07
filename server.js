@@ -38,6 +38,12 @@ app.get('/profile', (req, res) => {
     res.sendFile(path.join(__dirname, '/public/profile.html'));
 });
 
+app.get('/register', (req, res) => {
+    // __dirname is the directory of the current script
+    res.sendFile(path.join(__dirname, 'public/register.html'));
+});
+
+
 app.use('/api/auth', authRoutes);
 app.use('/api', userRoutes);
 
