@@ -1,6 +1,15 @@
 <div class="headerContainer container text-white">
     <div class="row">
         <div class="col d-flex align-items-center">SPACE SHOOTER</div>
-        <div class="col d-flex justify-content-end align-items-center">username</div>
+        <div class="col d-flex justify-content-end align-items-center">
+            <span>
+                <% if (typeof user !== 'undefined' && user) { %> 
+                    <%= user.username %>
+                <% } %>
+            </span>
+            <% if (typeof user !== 'undefined' && user) { %>
+                <a id="btnLogout" class="d-flex align-items-center ms-3 font-weight-bold">Logout</a>
+            <% } %>
+        </div>
     </div>
 </div>

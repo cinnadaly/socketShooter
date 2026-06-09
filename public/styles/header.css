@@ -1,7 +1,17 @@
 .headerContainer{
 }
-.headerContainer .row .col{
+.headerContainer .row .col, a{
     height: 10vh;
     font-weight: bold;
     font-size: 25px;
+    font-style: none;
+    color: #fff;
+    text-decoration: none;
+}
+
+a{
+    cursor: pointer;
+}
+a:hover{
+    color: #bcbcbc;
 }

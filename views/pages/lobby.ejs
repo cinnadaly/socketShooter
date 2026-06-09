@@ -10,8 +10,9 @@
 </head>
 <body class="bg-transparent">
 
-    <header class="bg bg-dark">
-        <%- include('../partials/header'); %>
+    <header>
+        <!-- user variable comes from our server.js route -->
+        <%- include('../partials/header', { user }); %>
     </header>
 
 
@@ -26,8 +27,10 @@
                 <div class="card bg-none bg-transparent">
                     <div class="card-body bg-none bg-transparent">
                             <div class="row d-flex justify-content-center ">
-                                <div class="col-5 st_client_name d-flex justify-content-center bg-none">Vaquera7x</div>
-                                <div class="col-5 nd_client_name d-flex justify-content-center bg-none">Karolgal</div>
+                                <div class="col-5 st_client_name d-flex justify-content-center bg-none">
+                                    <%= user.username %>
+                                </div>
+                                <div class="col-5 nd_client_name d-flex justify-content-center bg-none">client2</div>
                             </div>
                             <div class="row d-flex justify-content-center ">
                                 <div class="col-5 st_client_status d-flex justify-content-center bg-none">Ready</div>
@@ -45,6 +48,8 @@
         </div>
 
     <script src='//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js'></script>
+
+    <script src="../service/logout.js"></script>
 
 </body>
 </html>

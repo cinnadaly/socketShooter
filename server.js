@@ -27,35 +27,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 // set the view engine to ejs
 app.set('view engine', 'ejs');
 
-/*
-
-app.get('/', (req, res) => {
-    // __dirname is the directory of the current script
-    //res.sendFile(path.join(__dirname, 'public/login.html'));
-    res.render('pages/login')
-});
-
-app.get('/game', (req, res) => {
-    // __dirname is the directory of the current script
-    res.sendFile(path.join(__dirname, '/public/game.html'));
-});
-
-app.get('/lobby', (req, res) => {
-    // __dirname is the directory of the current script
-    res.render('pages/lobby')
-});
-
-
-app.get('/profile', (req, res) => {
-    // __dirname is the directory of the current script
-    res.sendFile(path.join(__dirname, '/public/profile.html'));
-});
-
-app.get('/register', (req, res) => {
-    // __dirname is the directory of the current script
-    res.sendFile(path.join(__dirname, '/public/register.html'));
-});*/
-
 //front
 app.use('/', pageRoutes);
 
