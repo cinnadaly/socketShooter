@@ -1,0 +1,7 @@
+.headerContainer{
+}
+.headerContainer .row .col{
+    height: 10vh;
+    font-weight: bold;
+    font-size: 25px;
+}

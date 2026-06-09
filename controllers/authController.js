@@ -53,6 +53,7 @@ const login = async (req, res) => {
             {
                 id: user.Id,
                 username: user.Username,
+                bestScore: user.BestScore
             },
             process.env.JWT_SECRET,
             {

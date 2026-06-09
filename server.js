@@ -6,6 +6,7 @@ const path = require('path');
 
 const authRoutes = require('./routes/authRoutes') //router => authRoutes.js
 const userRoutes = require('./routes/userRoutes') //router => userRoutes.js
+const pageRoutes = require('./routes/pageRoutes') //router => pageRoutes.js
 
 //read cookies
 const cookieParser = require("cookie-parser");
@@ -20,18 +21,30 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser());
 
-app.use(express.static("public"));
+// Servir archivos estáticos desde una carpeta llamada 'public'
+app.use(express.static(path.join(__dirname, 'public')));
 
+// set the view engine to ejs
+app.set('view engine', 'ejs');
+
+/*
 
 app.get('/', (req, res) => {
     // __dirname is the directory of the current script
-    res.sendFile(path.join(__dirname, 'public/login.html'));
+    //res.sendFile(path.join(__dirname, 'public/login.html'));
+    res.render('pages/login')
 });
 
 app.get('/game', (req, res) => {
     // __dirname is the directory of the current script
     res.sendFile(path.join(__dirname, '/public/game.html'));
 });
+
+app.get('/lobby', (req, res) => {
+    // __dirname is the directory of the current script
+    res.render('pages/lobby')
+});
+
 
 app.get('/profile', (req, res) => {
     // __dirname is the directory of the current script
@@ -41,9 +54,12 @@ app.get('/profile', (req, res) => {
 app.get('/register', (req, res) => {
     // __dirname is the directory of the current script
     res.sendFile(path.join(__dirname, '/public/register.html'));
-});
+});*/
 
+//front
+app.use('/', pageRoutes);
 
+//back
 app.use('/api/auth', authRoutes);
 app.use('/api', userRoutes);
 

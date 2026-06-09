@@ -24,7 +24,8 @@ router.delete('/users/:id', authMiddleware, deleteUser);
 router.get("/me", authMiddleware, (req, res) => {
     res.json({
         id: req.user.id,
-        username: req.user.username
+        username: req.user.username,
+        bestScore: req.user.bestScore
     });
 });
 

@@ -31,7 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 form.reset();
 
                 // login rdirect
-                window.location.href = "/login.html";
+                window.location.href = "/login";
             }
             else {
                 alert(data.errorMessage);

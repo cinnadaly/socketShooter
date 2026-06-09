@@ -1,5 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
     const BASE_URL = "http://localhost:3000/api/auth/";
+    
 
     const form = document.getElementById("loginForm");
 
@@ -30,7 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 form.reset();
 
                 // login rdirect
-                window.location.href = "/game.html";
+                window.location.href = "/lobby";
             }
             else {
                 alert(data.errorMessage);
