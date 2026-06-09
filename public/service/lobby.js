@@ -1,10 +1,14 @@
+const BASE_URL = "http://localhost:3000/api/auth/";
 
-            const response = await fetch(`${BASE_URL}me`, {
-                method: "GET",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                credentials:"include"
-            });
+let getUserLogged = async () => {
+    const response = await fetch(`${BASE_URL}me`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        credentials:"include"
+    });
 
-            const data = await response.json();
+    const data = await response.json();
+    console.log(data);
+}
