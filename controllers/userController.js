@@ -161,10 +161,45 @@ const deleteUser = async (req, res) => {
     }
 }
 
+/*const findByEmail = async (email) => {
+    const result = await new sql.Request().input(
+        "email", msnodesqlv8.VarChar, email
+    ).query(`SELECT * FROM Users WHERE Email = @email`);
+    //return result
+    return result.recordset[0];
+};*/
+
+/*//create user
+const createUser = async (user) => {
+    //create parameters
+    await new msnodesqlv8.Request().input(
+        "username", msnodesqlv8.VarChar, user.displayName
+    ).input(
+        "email", msnodesqlv8.VarChar, user.email
+    ).query(`INSERT INTO Users (Username, Email) Values (@username, @email)`);
+}; */
+
+const findByEmail = async (email) => {
+    const result = await msnodesqlv8.query`
+        SELECT * FROM Users
+        WHERE Email = ${email}`;
+    return result.recordset[0];
+};
+
+const createUser = async (user) => {
+    await msnodesqlv8.query`
+        INSERT INTO Users (Username, Email, PasswordHash)
+        VALUES (${user.username}, ${user.email}, ${user.passwordHash})
+    `;
+};
+
+
+
 module.exports = {
     registerUser,
     getAllUser,
     getUserById,
-    deleteUser
-
+    deleteUser,
+    createUser,
+    findByEmail
 }

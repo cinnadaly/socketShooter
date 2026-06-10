@@ -4,7 +4,7 @@
 <head>
     <%- include('../partials/head'); %>
 
-    <title>Socket-shooter | Login</title>
+        <title>Socket-shooter | Login</title>
 </head>
 
 <body>
@@ -28,6 +28,14 @@
 
         <button type="submit" class="btn btn-primary">Submit</button>
 
+        <div class="text-center mt-3">
+            <small>
+                Login with
+                <a href="/api/auth/google" class="google-link">
+                    Google
+                </a>
+            </small>
+        </div>
     </form>
     <script src='//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js'></script>
     <script src="../service/login.js"></script>
