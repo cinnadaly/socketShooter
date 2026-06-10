@@ -8,6 +8,9 @@ const { error } = require("node:console")
 
 const login = async (req, res) => {
     try {
+
+        console.log(msnodesqlv8);
+
         //get login data
         const { username, password } = req.body;
         console.log(username, password)
@@ -53,6 +56,7 @@ const login = async (req, res) => {
             {
                 id: user.Id,
                 username: user.Username,
+                email: user.Email,
                 bestScore: user.BestScore
             },
             process.env.JWT_SECRET,
@@ -103,9 +107,24 @@ const logout = async (req, res) => {
     }
 }
 
+//create token module NOT COOKIE ONLY JWT
+const createToken = (user) => {
+    return jwt.sign({
+        id: user.Id,
+        username: user.Username,
+        email: user.Email,
+        bestScore: user.BestScore
+    },
+        process.env.JWT_SECRET,
+        {
+            expiresIn: "1h"
+        }
+    );
+};
 
 module.exports = {
     login,
-    logout
-    
+    logout,
+    createToken
+
 };
