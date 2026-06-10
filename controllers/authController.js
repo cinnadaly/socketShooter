@@ -8,12 +8,9 @@ const { error } = require("node:console")
 
 const login = async (req, res) => {
     try {
-
-        console.log(msnodesqlv8);
-
         //get login data
         const { username, password } = req.body;
-        console.log(username, password)
+        console.log("user:", username, " with password:", password, "logged in")
 
         //check fields
         if (!username || !password) {
