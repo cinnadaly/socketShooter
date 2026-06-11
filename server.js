@@ -39,7 +39,7 @@ app.use('/api', userRoutes);
 
 //create node SERVER
 const server = http.createServer(app);
-
+//socket.io server
 initializeWebSocket(server);
 
 //CREATE SERVER

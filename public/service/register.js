@@ -9,6 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const username = document.getElementById("username").value.trim();
         const password = document.getElementById("password").value.trim();
+        const email = document.getElementById("email").value.trim();
 
         try {
 
@@ -19,7 +20,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 },
                 body: JSON.stringify({
                     username,
-                    password
+                    password,
+                    email
                 })
             });
 
@@ -31,7 +33,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 form.reset();
 
                 // login rdirect
-                window.location.href = "/login";
+                window.location.href = "/";
             }
             else {
                 alert(data.errorMessage);
