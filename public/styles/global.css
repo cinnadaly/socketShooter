@@ -1,13 +1,12 @@
-
-body{
-  padding:0px !important;
+body {
+  padding: 0px !important;
 }
 
 html {
-  height:100vh;
+  height: 100vh;
   background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
   overflow: hidden;
-  padding:0 !important;
+  padding: 0 !important;
 }
 
 #stars {
@@ -95,7 +94,7 @@ html {
   }
 }
 
-header{
+header {
   position: absolute;
   width: 100vw;
   background-color: #1b2735;
@@ -115,4 +114,18 @@ form {
   border-radius: 15px;
   color: #fff;
   padding: 25px 30px;
+}
+
+.register-link {
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #0d6efd;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.register-link:hover {
+  color: #0a58ca;
+  text-decoration: underline;
 }

@@ -20,6 +20,10 @@ router.get('/google', passport.authenticate(
     }
 ))
 
+router.get("/login", (req, res) => {
+    res.render("login");
+});
+
 //callback
 /*router.get("/google/callback", passport.authenticate("google",
     {
