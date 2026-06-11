@@ -1,5 +1,6 @@
 body {
   padding: 0px !important;
+  background-color: none !important;
 }
 
 html {
@@ -102,11 +103,9 @@ header {
 
 /*center forms*/
 form {
-  position: absolute;
-  z-index: 2;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+
+  position:static;
+  z-index: 10 !important;
 
   width: 400px;
   background-color: #fff;
