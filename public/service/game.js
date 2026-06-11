@@ -18,6 +18,7 @@ let cursores;
 let espacio;
 let enter;
 
+
 let score = 0;
 let scoreText;
 
@@ -87,11 +88,7 @@ function update() {
         jugador.x += 6;
     }
 
-<<<<<<< HEAD
     if(Phaser.Input.Keyboard.JustDown(enter)) {
-=======
-    if (Phaser.Input.Keyboard.JustDown(enter)) {
->>>>>>> 6a1acc93eaec0aa00c44e4f3a421639f37aaa5b1
         console.log("dispara")
     }
 }
