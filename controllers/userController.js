@@ -7,12 +7,13 @@ const { error } = require("node:console")
 
 // Add User
 const registerUser = async (req, res) => {
+    console.log(req.body);
     try {
         // Get data from BODY
-        const { username, password } = req.body;
+        const { username, password, email } = req.body;
 
         // validate data
-        if (!username || !password) {
+        if (!username || !password || !email) {
 
             // display
             return res.status(400).json({
@@ -39,7 +40,7 @@ const registerUser = async (req, res) => {
 
         //INsert user
         await msnodesqlv8.query`
-            Insert Into Users (Username, PasswordHash) Values (${username}, ${hashedPassword})
+            Insert Into Users (Username, PasswordHash, Email) Values (${username}, ${hashedPassword}, ${email})
         `;
 
         //Response
