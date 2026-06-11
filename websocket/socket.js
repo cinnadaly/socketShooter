@@ -1,9 +1,8 @@
 const WebSocket = require("ws");
 const cookie = require("cookie");
 const jwt = require("jsonwebtoken");
-const { sql } = require("../config/db");
-//connected users
-const clients = {};
+const { msnodesqlv8 } = require("../config/db");
+let clients = {};
 
 const initializeWebSocket = (server) => {
     //create websocket server
@@ -11,9 +10,23 @@ const initializeWebSocket = (server) => {
         server, //attach to express server
         path: "/ws"//route
     });
+
+    //socket connections
+    let activeConnections = 0;
+    const MAX_CONNECTIONS = 2;
+           
     //when user connects
     wss.on("connection", async (ws, req) => {
+        console.log("socket io server started")
         try {
+            // Check if the limit is exceeded
+            if (wss.clients.size > MAX_CONNECTIONS) {
+                console.log("max limit reached")
+                ws.close(1013, "Service temporarily overloaded, max connections reached.");
+                return;
+            }
+            console.log(`New connection established. Total: ${wss.clients.size}`);
+
             //read cookies
             const cookies = cookie.parse(req.headers.cookie || "");
             //read token cookie
@@ -31,7 +44,7 @@ const initializeWebSocket = (server) => {
             );
 
             //find user in db
-            const result = await sql.query`
+            const result = await msnodesqlv8.query`
                 SELECT *
                 FROM Users
                 WHERE Email = ${decoded.email}
