@@ -31,18 +31,14 @@ let restartText;
 
 function create() {
 
-    /*player = this.add.rectangle(
+    player = this.add.rectangle(
         250,
         620,
         50,
         50,
-        0x00ff008*/
+        0x00ff008
 
-        player = this.load.image('logo', '../assets/player.GIF');
-
-        player = this.add.image(250, 620, 'logo');
-        player.setDisplaySize(50, 50); 
-    //);
+    );
 
     for (let i = 0; i < 5; i++) {
         spawnEnemy.call(this);
@@ -79,6 +75,11 @@ function create() {
 
 //main 
 function update() {
+
+    //check if game over?
+    if (gameOver) {
+        return;
+    }
 
     if (leftKey.isDown && player.x > 25) {
         player.x -= 6;
@@ -146,10 +147,21 @@ function update() {
         }
     }
 
-    for (enemy of enemies) {
+    // test to stop game over loop :)
+    /*for (enemy of enemies) {
 
         if (isColliding(player, enemy)) {
             alert("Game Over");
+        }
+    }*/
+    for (const enemy of enemies) {
+        if (!gameOver && isColliding(player, enemy)) {
+
+            gameOver = true;
+
+            alert("Game Over");
+
+            return;
         }
     }
 }
@@ -163,19 +175,19 @@ function isColliding(a, b) {
 
     return (
         a.getBounds().x <
-            b.getBounds().x +
-            b.getBounds().width &&
+        b.getBounds().x +
+        b.getBounds().width &&
 
         a.getBounds().x +
-            a.getBounds().width >
-            b.getBounds().x &&
+        a.getBounds().width >
+        b.getBounds().x &&
 
         a.getBounds().y <
-            b.getBounds().y +
-            b.getBounds().height &&
+        b.getBounds().y +
+        b.getBounds().height &&
 
         a.getBounds().y +
-            a.getBounds().height >
-            b.getBounds().y
+        a.getBounds().height >
+        b.getBounds().y
     );
 }
