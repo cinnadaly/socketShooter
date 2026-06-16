@@ -18,10 +18,11 @@ const initializeWebSocket = (server) => {
     //when user connects
     wss.on("connection", async (ws, req) => {
         console.log("socket io server started")
+        console.log(wss)
+        //wss.clients.forEach((client) => console.log(client.Email))
         try {
             // Check if the limit is exceeded
             if (wss.clients.size > MAX_CONNECTIONS) {
-                console.log("max limit reached")
                 ws.close(1013, "Service temporarily overloaded, max connections reached.");
                 return;
             }
@@ -68,9 +69,29 @@ const initializeWebSocket = (server) => {
             }
 
             //save connected user
-            clients[user.Email.toLowerCase()] = ws;
+            //clients[user.Email.toLowerCase()] = ws;
+            //clients[user.Id.toLowerCase()] = ws;
+
+            ws.userId = user.Id;
+            ws.email = user.Email;
+            ws.name = user.Username;
+
+            const connectedUsers = Array.from(wss.clients)
+                console.log("All USERS")
+            connectedUsers.forEach((user) => {
+                console.log(`ID: ${user.userId} Name ${user.name}`  )
+            })
+
+            wss.clients.forEach((client) => {
+                console.log({
+                    id: client.userId,
+                    name: client.name,
+                    email: client.email
+                })
+            })
 
             console.log(`${user.Email} connected`);
+            console.log(`${user.Id} is the ID`);
 
             //receive messages (listen)
             ws.on("message", (message) => {

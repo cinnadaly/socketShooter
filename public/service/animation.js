@@ -628,13 +628,13 @@ function objects() {
      */
     const sizes = {
         width: window.innerWidth,
-        height: window.innerHeight
+        height: 600//window.innerHeight
     };
 
     window.addEventListener("resize", () => {
         // Update sizes
         sizes.width = window.innerWidth;
-        sizes.height = window.innerHeight;
+        sizes.height = 600//window.innerHeight;
 
         // Update camera2
         camera2.aspect = sizes.width / sizes.height;

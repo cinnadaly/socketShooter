@@ -7,6 +7,9 @@
         <title>Socket-shooter | Login</title>
         <link rel="stylesheet" href="./styles/global.css">
         <link rel="stylesheet" href="./styles/robot.css">
+        <link rel="stylesheet" href="./styles/login.css">
+        <link rel="stylesheet" href="./styles/shooting-stars.css" rel='stylesheet' type='text/css'>
+        <link href='https://fonts.googleapis.com/css?family=Lato:300,400,700' rel='stylesheet' type='text/css'>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 </head>
 
@@ -15,58 +18,35 @@
         <%- include('../partials/header'); %>
     </header>
 
-    <link href='https://fonts.googleapis.com/css?family=Lato:300,400,700' rel='stylesheet' type='text/css'>
-    <div id='stars'></div>
-    <div id='stars2'></div>
-    <div id='stars3'></div>
-
     <!--
-    <main class="container">
-        <section class="container-fluid">
-            <div class="row">
-                <div class="col border border-warning">
-                    <form id="loginForm">
-                        <div class="mb-3">
-                            <label for="exampleInputEmail1" class="form-label">Username</label>
-                            <input type="text" class="form-control" id="username" aria-describedby="emailHelp">
-                        </div>
-                        <div class="mb-3">
-                            <label for="exampleInputPassword1" class="form-label">Password</label>
-                            <input type="password" class="form-control" id="password">
-                        </div>
-
-                        <button type="submit" class="btn btn-primary">Submit</button>
-
-                        <div class="text-center mt-3">
-                            <small>
-                                Login with
-                                <a href="/api/auth/google" class="google-link">
-                                    Google
-                                </a>
-                            </small>
-                        </div>
-                        <div class="text-center mt-2">
-                            <span class="text-light">
-                                Don't have an account?
-                            </span>
-                            <a href="/register" class="register-link">
-                                Register here
-                            </a>
-                        </div>
-                    </form>
-                </div>
-                <div class="col border border-warning">
-                    hola como esta
-
-                </div>
-            </div>
-        </section>
-    </main> -->
+    <div class="night">
+        <div class="shooting_star"></div>
+        <div class="shooting_star"></div>
+        <div class="shooting_star"></div>
+        <div class="shooting_star"></div>
+        <div class="shooting_star"></div>
+        <div class="shooting_star"></div>
+        <div class="shooting_star"></div>
+        <div class="shooting_star"></div>
+        <div class="shooting_star"></div>
+        <div class="shooting_star"></div>
+        <div class="shooting_star"></div>
+        <div class="shooting_star"></div>
+        <div class="shooting_star"></div>
+        <div class="shooting_star"></div>
+        <div class="shooting_star"></div>
+        <div class="shooting_star"></div>
+        <div class="shooting_star"></div>
+        <div class="shooting_star"></div>
+        <div class="shooting_star"></div>
+        <div class="shooting_star"></div>
+    </div>
+-->
 
 
     <main class="container py-5">
-        <div class="row align-items-center">
 
+        <div class="row align-items-center">
             <div class="col-lg-5">
                 <form id="loginForm">
                     <div class="mb-3">
@@ -350,14 +330,16 @@
                             </g>
                         </svg>
                     </div>
-                    <canvas class="webgl2"></canvas>
                 </div>
             </div>
         </div>
     </main>
+
+    <%- include('../partials/footer'); %>
+
     <script src='//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js'></script>
     <script src="../service/login.js"></script>
     <script src="../service/animation.js"></script>
-</body>
 
+</body>
 </html>
