@@ -4,20 +4,23 @@ const config = {
     height: 700,
     backgroundColor: "#000000",
     scene: {
-        create: create,
-        update: update
+        create,
+        update
     }
 };
 
 new Phaser.Game(config);
 
+let player;
 
-let jugador;
+let cursors;
+let shootKey;
+let enterKey;
+let leftKey;
+let rightKey;
 
-let cursores;
-let espacio;
-let enter;
-
+let bullets = [];
+let enemies = [];
 
 let score = 0;
 let scoreText;
@@ -28,7 +31,7 @@ let restartText;
 
 function create() {
 
-    jugador = this.add.rectangle(
+    player = this.add.rectangle(
         250,
         620,
         50,
@@ -36,23 +39,26 @@ function create() {
         0x00ff00
     );
 
+    for (let i = 0; i < 5; i++) {
+        spawnEnemy.call(this);
+    }
 
-    cursores = this.input.keyboard.createCursorKeys();
+    cursors = this.input.keyboard.createCursorKeys();
 
-    espacio = this.input.keyboard.addKey(
+    shootKey = this.input.keyboard.addKey(
         Phaser.Input.Keyboard.KeyCodes.SPACE
     );
 
-    enter = this.input.keyboard.addKey(
-        Phaser.Input.Keyboard.KeyCodes.ENTER
+    leftKey = this.input.keyboard.addKey(
+        Phaser.Input.Keyboard.KeyCodes.A
     );
 
-    right = this.input.keyboard.addKey(
+    rightKey = this.input.keyboard.addKey(
         Phaser.Input.Keyboard.KeyCodes.D
     );
 
-    left = this.input.keyboard.addKey(
-        Phaser.Input.Keyboard.KeyCodes.A
+    enterKey = this.input.keyboard.addKey(
+        Phaser.Input.Keyboard.KeyCodes.ENTER
     );
 
     scoreText = this.add.text(
@@ -66,90 +72,105 @@ function create() {
     );
 }
 
+//main 
 function update() {
 
-    if (gameOver) {
+    if (leftKey.isDown && player.x > 25) {
+        player.x -= 6;
+    }
 
-        if (
-            Phaser.Input.Keyboard.JustDown(
-                enter
-            )
-        ) {
-            reiniciar.call(this);
+    if (rightKey.isDown && player.x < 475) {
+        player.x += 6;
+    }
+
+    if (Phaser.Input.Keyboard.JustDown(shootKey)) {
+
+        const bullet = this.add.rectangle(player.x, player.y - 30, 5, 15, 0xffff00);
+
+        bullets.push(bullet);
+    }
+
+    for (let i = bullets.length - 1; i >= 0; i--) {
+
+        bullets[i].y -= 50;
+
+        if (bullets[i].y < 0) {
+
+            bullets[i].destroy();
+
+            bullets.splice(i, 1);
         }
-
-        return;
-    }
-    if (left.isDown && jugador.x > 25) {
-        jugador.x -= 6;
     }
 
-    if (right.isDown && jugador.x < 475) {
-        jugador.x += 6;
+    for (let i = enemies.length - 1; i >= 0; i--) {
+
+        enemies[i].y += 4;
+
+        if (enemies[i].y > 750) {
+
+            enemies[i].destroy();
+
+            enemies.splice(i, 1);
+
+            spawnEnemy.call(this);
+        }
     }
 
-    if(Phaser.Input.Keyboard.JustDown(enter)) {
-        console.log("dispara")
+    for (let i = enemies.length - 1; i >= 0; i--) {
+
+        for (let j = bullets.length - 1; j >= 0; j--) {
+
+            if (isColliding(enemies[i], bullets[j])) {
+
+                enemies[i].destroy();
+                bullets[j].destroy();
+
+                enemies.splice(i, 1);
+                bullets.splice(j, 1);
+
+                spawnEnemy.call(this);
+
+                score++;
+
+                scoreText.setText(
+                    "Score: " + score
+                );
+
+                break;
+            }
+        }
+    }
+
+    for (enemy of enemies) {
+
+        if (isColliding(player, enemy)) {
+            alert("Game Over");
+        }
     }
 }
 
+function spawnEnemy() {
+    const enemy = this.add.rectangle(Phaser.Math.Between(25, 475), Phaser.Math.Between(-500, -50), 50, 50, 0xff0000);
+    enemies.push(enemy);
+}
 
-function colision(a, b) {
+function isColliding(a, b) {
 
-    const aBox = a.getBounds();
-    const bBox = b.getBounds();
     return (
-        aBox.x < bBox.x + bBox.width &&
-        aBox.x + aBox.width > bBox.x &&
-        aBox.y < bBox.y + bBox.height &&
-        aBox.y + aBox.height > bBox.y
+        a.getBounds().x <
+            b.getBounds().x +
+            b.getBounds().width &&
+
+        a.getBounds().x +
+            a.getBounds().width >
+            b.getBounds().x &&
+
+        a.getBounds().y <
+            b.getBounds().y +
+            b.getBounds().height &&
+
+        a.getBounds().y +
+            a.getBounds().height >
+            b.getBounds().y
     );
-}
-
-function mostrarGameOver() {
-
-    if (gameOver) {
-        return;
-    }
-
-    gameOver = true;
-
-    gameOverText =
-        this.add.text(
-            70,
-            300,
-            "LAS NAVES GANARON",
-            {
-                fontSize: "36px",
-                color: "#ffffff"
-            }
-        );
-
-    restartText =
-        this.add.text(
-            70,
-            360,
-            "ENTER para reiniciar",
-            {
-                fontSize: "28px",
-                color: "#ffffff"
-            }
-        );
-}
-
-function reiniciar() {
-
-    score = 0;
-
-    gameOver = false;
-
-    scoreText.setText(
-        "Score: 0"
-    );
-
-    jugador.x = 250;
-    jugador.y = 620;
-
-    gameOverText.destroy();
-    restartText.destroy();
 }

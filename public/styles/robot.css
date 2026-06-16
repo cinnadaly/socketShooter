@@ -9,7 +9,7 @@
     position: absolute;
     inset: 0;
     width: 100%;
-    height: 100%;
+    /*height: 100vh;*/
     pointer-events: none;
 }
 
@@ -39,12 +39,12 @@
 
 .robot-panel svg {
     width: 100%;
-    height: 100%;
+    /*height: 100%;*/
 }
 
 .robot-panel canvas {
     width: 100%;
-    height: 100%;
+    /*height: 100%;*/
 }
 
 #webgl {
@@ -83,6 +83,7 @@
 body {
     overflow-x: hidden;
     background: none;
+    height: 100vh !important;
 }
 
 .robot-panel {
