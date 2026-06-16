@@ -31,13 +31,18 @@ let restartText;
 
 function create() {
 
-    player = this.add.rectangle(
+    /*player = this.add.rectangle(
         250,
         620,
         50,
         50,
-        0x00ff00
-    );
+        0x00ff008*/
+
+        player = this.load.image('logo', '../assets/player.GIF');
+
+        player = this.add.image(250, 620, 'logo');
+        player.setDisplaySize(50, 50); 
+    //);
 
     for (let i = 0; i < 5; i++) {
         spawnEnemy.call(this);
