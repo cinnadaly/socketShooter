@@ -51,6 +51,7 @@
     display: block;
     position: absolute;
     inset: 0;
+    display: none !important
 }
 
 @media (max-width: 992px) {
@@ -73,26 +74,24 @@
     }
 
     .robot-panel .svg-box {
-        width: 420px;
-        height: 315px;
+        width: 100%;
+        height: 100%;
     }
 
 }
 
 body {
     overflow-x: hidden;
+    background: none;
 }
 
 .robot-panel {
 
     position: relative;
-
     width: 700px;
-
-    height: 525px;
-
+    height: 450px;
     flex-shrink: 0;
-
+    background: none !important;
 }
 
 #robot-wrapper {
