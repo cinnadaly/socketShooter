@@ -1,0 +1,109 @@
+#webgl {
+    width: 800px;
+    height: 600px;
+    position: absolute;
+    z-index: -1;
+}
+
+.webgl2 {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+#bg-box {
+    width: 802px;
+    height: 602px;
+    position: absolute;
+    z-index: -1;
+    color: transparent
+}
+
+.svg-box {
+    width: 700px;
+    height: 525px;
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    z-index: 1;
+}
+
+
+.robot-panel .svg-box {
+    width: 700px;
+    height: 525px;
+    position: relative;
+}
+
+.robot-panel svg {
+    width: 100%;
+    height: 100%;
+}
+
+.robot-panel canvas {
+    width: 100%;
+    height: 100%;
+}
+
+#webgl {
+    display: block;
+    position: absolute;
+    inset: 0;
+}
+
+@media (max-width: 992px) {
+
+    .login-container {
+        flex-direction: column;
+        justify-content: center;
+        gap: 30px;
+        padding: 100px 20px 40px;
+    }
+
+    .robot-panel {
+        order: 2;
+    }
+
+    .login-panel {
+        order: 1;
+        width: 100%;
+        max-width: 450px;
+    }
+
+    .robot-panel .svg-box {
+        width: 420px;
+        height: 315px;
+    }
+
+}
+
+body {
+    overflow-x: hidden;
+}
+
+.robot-panel {
+
+    position: relative;
+
+    width: 700px;
+
+    height: 525px;
+
+    flex-shrink: 0;
+
+}
+
+#robot-wrapper {
+    transform: scale(.75);
+    transform-origin: center;
+    width: 100%;
+    height: 650px;
+    position: relative;
+}
+
+.webgl2,
+canvas {
+    background: transparent !important;
+}
