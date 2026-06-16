@@ -109,7 +109,8 @@ footer {
   background-color: #1b2735;
   height: 50px;
   width: 100vw;
-  color: #38495a;
+  color: #666666;
+  font-size: 12px;
   display: flex;
   align-items: center;
   justify-content: space-between;
