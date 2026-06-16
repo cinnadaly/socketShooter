@@ -28,3 +28,17 @@
     font-weight: bold;
     padding:15px
 }
+
+
+.imgLoading {
+    height: 20px;
+    width: 100%;
+    background-image: url("../assets/loading.gif");
+    background-size: 120%;
+    background-position: center;
+    margin-top: 4px;
+}
+
+.txtStatus {
+    display: none;
+}
