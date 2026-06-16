@@ -61,10 +61,7 @@ function create() {
         Phaser.Input.Keyboard.KeyCodes.ENTER
     );
 
-    scoreText = this.add.text(
-        10,
-        10,
-        "Score: 0",
+    scoreText = this.add.text(10, 10, "Score: 0",
         {
             fontSize: "30px",
             color: "#ffffff"
@@ -73,17 +70,10 @@ function create() {
 }
 
 function update() {
-
     if (gameOver) {
-
-        if (
-            Phaser.Input.Keyboard.JustDown(
-                enterKey
-            )
-        ) {
+        if (Phaser.Input.Keyboard.JustDown(enterKey)) {
             restart.call(this);
         }
-
         return;
     }
 
@@ -95,12 +85,7 @@ function update() {
         player.x += 6;
     }
 
-    if (
-        Phaser.Input.Keyboard.JustDown(
-            shootKey
-        )
-    ) {
-
+    if (Phaser.Input.Keyboard.JustDown(shootKey)){
         const bullet =
             this.add.rectangle(
                 player.x,
@@ -126,30 +111,19 @@ function update() {
     }
 
     for (let i = enemies.length - 1; i >= 0; i--) {
-
         enemies[i].y += 4;
 
         if (enemies[i].y > 750) {
-
             enemies[i].destroy();
-
             enemies.splice(i, 1);
-
             spawnEnemy.call(this);
         }
     }
 
-    for (let i = enemies.length - 1; i >= 0; i--) {
+    for (let i = enemies.length - 1; i >= 0; i--){
+        for (let j = bullets.length - 1; j >= 0; j--){
 
-        for (let j = bullets.length - 1; j >= 0; j--) {
-
-            if (
-                isColliding(
-                    enemies[i],
-                    bullets[j]
-                )
-            ) {
-
+            if (isColliding(enemies[i], bullets[j])){
                 enemies[i].destroy();
                 bullets[j].destroy();
 
@@ -157,12 +131,9 @@ function update() {
                 bullets.splice(j, 1);
 
                 spawnEnemy.call(this);
-
                 score++;
 
-                scoreText.setText(
-                    "Score: " + score
-                );
+                scoreText.setText("Score: " + score);
 
                 break;
             }
@@ -170,14 +141,7 @@ function update() {
     }
 
     for (const enemy of enemies) {
-
-        if (
-            isColliding(
-                player,
-                enemy
-            )
-        ) {
-
+        if (isColliding(player, enemy)){
             showGameOver.call(this);
         }
     }
@@ -226,7 +190,7 @@ function isColliding(a, b) {
 
 function showGameOver() {
 
-    if (gameOver) {
+    if(gameOver){
         return;
     }
 
