@@ -36,8 +36,7 @@ function create() {
         620,
         50,
         50,
-        0x00ff008
-
+        0x00ff00
     );
 
     for (let i = 0; i < 5; i++) {
@@ -73,11 +72,18 @@ function create() {
     );
 }
 
-//main 
 function update() {
 
-    //check if game over?
     if (gameOver) {
+
+        if (
+            Phaser.Input.Keyboard.JustDown(
+                enterKey
+            )
+        ) {
+            restart.call(this);
+        }
+
         return;
     }
 
@@ -89,16 +95,27 @@ function update() {
         player.x += 6;
     }
 
-    if (Phaser.Input.Keyboard.JustDown(shootKey)) {
+    if (
+        Phaser.Input.Keyboard.JustDown(
+            shootKey
+        )
+    ) {
 
-        const bullet = this.add.rectangle(player.x, player.y - 30, 5, 15, 0xffff00);
+        const bullet =
+            this.add.rectangle(
+                player.x,
+                player.y - 30,
+                5,
+                15,
+                0xffff00
+            );
 
         bullets.push(bullet);
     }
 
     for (let i = bullets.length - 1; i >= 0; i--) {
 
-        bullets[i].y -= 50;
+        bullets[i].y -= 15;
 
         if (bullets[i].y < 0) {
 
@@ -126,7 +143,12 @@ function update() {
 
         for (let j = bullets.length - 1; j >= 0; j--) {
 
-            if (isColliding(enemies[i], bullets[j])) {
+            if (
+                isColliding(
+                    enemies[i],
+                    bullets[j]
+                )
+            ) {
 
                 enemies[i].destroy();
                 bullets[j].destroy();
@@ -147,27 +169,37 @@ function update() {
         }
     }
 
-    // test to stop game over loop :)
-    /*for (enemy of enemies) {
-
-        if (isColliding(player, enemy)) {
-            alert("Game Over");
-        }
-    }*/
     for (const enemy of enemies) {
-        if (!gameOver && isColliding(player, enemy)) {
 
-            gameOver = true;
+        if (
+            isColliding(
+                player,
+                enemy
+            )
+        ) {
 
-            alert("Game Over");
-
-            return;
+            showGameOver.call(this);
         }
     }
 }
 
 function spawnEnemy() {
-    const enemy = this.add.rectangle(Phaser.Math.Between(25, 475), Phaser.Math.Between(-500, -50), 50, 50, 0xff0000);
+
+    const enemy =
+        this.add.rectangle(
+            Phaser.Math.Between(
+                25,
+                475
+            ),
+            Phaser.Math.Between(
+                -500,
+                -50
+            ),
+            50,
+            50,
+            0xff0000
+        );
+
     enemies.push(enemy);
 }
 
@@ -175,19 +207,82 @@ function isColliding(a, b) {
 
     return (
         a.getBounds().x <
-        b.getBounds().x +
-        b.getBounds().width &&
+            b.getBounds().x +
+            b.getBounds().width &&
 
         a.getBounds().x +
-        a.getBounds().width >
-        b.getBounds().x &&
+            a.getBounds().width >
+            b.getBounds().x &&
 
         a.getBounds().y <
-        b.getBounds().y +
-        b.getBounds().height &&
+            b.getBounds().y +
+            b.getBounds().height &&
 
         a.getBounds().y +
-        a.getBounds().height >
-        b.getBounds().y
+            a.getBounds().height >
+            b.getBounds().y
     );
+}
+
+function showGameOver() {
+
+    if (gameOver) {
+        return;
+    }
+
+    gameOver = true;
+
+    gameOverText =
+        this.add.text(
+            70,
+            300,
+            "THE ENEMIES WON",
+            {
+                fontSize: "36px",
+                color: "#ffffff"
+            }
+        );
+
+    restartText =
+        this.add.text(
+            70,
+            360,
+            "Press ENTER to restart",
+            {
+                fontSize: "28px",
+                color: "#ffffff"
+            }
+        );
+}
+
+function restart() {
+
+    score = 0;
+
+    gameOver = false;
+
+    scoreText.setText(
+        "Score: 0"
+    );
+
+    for (const bullet of bullets) {
+        bullet.destroy();
+    }
+
+    for (const enemy of enemies) {
+        enemy.destroy();
+    }
+
+    bullets = [];
+    enemies = [];
+
+    player.x = 250;
+    player.y = 620;
+
+    for (let i = 0; i < 5; i++) {
+        spawnEnemy.call(this);
+    }
+
+    gameOverText.destroy();
+    restartText.destroy();
 }

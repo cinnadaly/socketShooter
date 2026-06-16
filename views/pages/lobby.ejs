@@ -25,13 +25,18 @@
                     <div class="card-body bg-none bg-transparent">
                             <div class="row d-flex justify-content-center ">
                                 <div class="col-5 st_client_name d-flex justify-content-center bg-none">
-                                    <%= user.username %>
+                                    <span id="userNameSpan" data-username="<%= user.username %>"><%= user.username %></span>
                                 </div>
-                                <div class="col-5 nd_client_name d-flex justify-content-center bg-none">client2</div>
+                                <div class="col-5 nd_client_name d-flex justify-content-center bg-none">
+                                    <span id="txtPlayerName">Waiting for team</span>
+                                </div>
                             </div>
                             <div class="row d-flex justify-content-center ">
                                 <div class="col-5 st_client_status d-flex justify-content-center bg-none">Ready</div>
-                                <div class="col-5 nd_client_status d-flex justify-content-center bg-none">Waiting</div>
+                                <div class="col-5 nd_client_status d-flex justify-content-center bg-none">
+                                    <span class="txtStatus" id="txtStatus">Ready</span>
+                                    <div class="imgLoading" id="imgLoading"></div>
+                                </div>
                             </div>
                             <div class="row d-flex justify-content-center ">
                                 <div class="col-10 d-flex justify-content-center">
