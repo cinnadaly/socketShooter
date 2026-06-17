@@ -3,6 +3,8 @@ let imgLoading = document.querySelector("#imgLoading");
 let txtStatus = document.querySelector("#txtStatus");
 let txtPlayerName = document.querySelector("#txtPlayerName");
 
+const BASE_URL = "http://localhost:3000/api/";
+
 btnStartGame.disabled = true;
 
 //socket client
@@ -10,10 +12,29 @@ const socket = new WebSocket("ws://localhost:3000/ws");
 
 const userNameSpan = document.querySelector("#userNameSpan");
 
-
 /*intervalLoading = setInterval(() => {
     console.log("waiting for player to join.");
 }, 1000);*/
+
+
+async function getUserLogged(){
+    const response = await fetch(`${BASE_URL}me`, {
+        method: "GET",
+        credentials: "include",
+        headers: {
+            "Content-Type": "application/json"
+        }
+    });
+
+    if(!response.ok){
+        throw new Error(response.status);
+    }
+
+    const data = await response.json();
+    console.log(data);
+
+    return data;
+}
 
 btnStartGame.addEventListener("click", () => {
     //trigger to server
@@ -22,11 +43,12 @@ btnStartGame.addEventListener("click", () => {
 
 
 //we receive
-socket.onmessage = (event) => {
+socket.onmessage = async (event) => {
     //data
     const data = JSON.parse(event.data);
     /*//display
     console.log(`${data.type.toString()}`);*/
+    
 
     //MAX LIMIT REACHED, we start the game
     if(data.type === "lobbyReady"){
@@ -63,6 +85,10 @@ socket.onmessage = (event) => {
 
     //when 1 player started game, server broadcast this to all active clients
     if(data.type === "gameStarted"){
+        user = await getUserLogged();
+        console.log("user from gameStarted client ", user)
+
+        sessionStorage.setItem("userId", user.id);
         window.location.href = "/game";
     }
 
@@ -71,36 +97,6 @@ socket.onmessage = (event) => {
 }
 
 
-//movement
-const keys = { 
-    left: false, 
-    right: false, 
-    //up: false, 
-    //down: false 
-}; 
-
-document.addEventListener("keydown", (e) => { 
-    if (e.key === "a") keys.left = true; 
-    if (e.key === "d") keys.right = true; 
-    //if (e.key === "w") keys.up = true; 
-    //if (e.key === "s") keys.down = true; 
-}); 
-
-document.addEventListener("keyup", (e) => { 
-    if (e.key === "a") keys.left = false; 
-    if (e.key === "d") keys.right = false; 
-    //if (e.key === "w") keys.up = false; 
-    //if (e.key === "s") keys.down = false; 
-}); 
-
-setInterval(() => { 
-    if (socket.readyState === WebSocket.OPEN) { 
-        socket.send(JSON.stringify({ 
-            type: "input", 
-            keys 
-        })); 
-    } 
-}, 1000 / 1); // 20 veces por segundo
 
 //close socket 
 socket.onclose = () => {
