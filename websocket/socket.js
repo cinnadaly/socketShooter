@@ -6,6 +6,26 @@ const { msnodesqlv8 } = require("../config/db");
 let clients = {};
 let isGameStarted = false;
 
+let enemies = [];
+
+//GAME functions from server (enemies and bullets)
+
+function randomBetween(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function spawnEnemy() {
+
+    const enemy = {
+        id: crypto.randomUUID(),
+        x: randomBetween(25, 475),
+        y: randomBetween(-500, -50)
+    };
+
+    enemies.push(enemy);
+    return enemy;
+}
+
 
 const initializeWebSocket = (server) => {
     //create websocket server
@@ -15,7 +35,7 @@ const initializeWebSocket = (server) => {
     });
 
     //socket connections
-    let activeConnections = 0;
+    //let activeConnections = 0;
     const MAX_CONNECTIONS = 2;
 
     //state of players
@@ -76,6 +96,8 @@ const initializeWebSocket = (server) => {
                 process.env.JWT_SECRET
             );
 
+            console.log("user id from jwt ", decoded.id)
+
             //find user in db
             const result = await msnodesqlv8.query`
                 SELECT *
@@ -99,7 +121,7 @@ const initializeWebSocket = (server) => {
             }
             
             //temp id from socket client
-            ws.id = randomUUID();
+            ws.id = decoded.id;
             ws.userId = user.Id;
             ws.email = user.Email;
             ws.name = user.Username;
@@ -121,42 +143,55 @@ const initializeWebSocket = (server) => {
             console.log(currentUser[0].userId);
             console.log("---------------------------------------")
 
-            /*wss.clients.forEach((client) => {
-                console.log({
-                    id: client.userId,
-                    name: client.name,
-                    email: client.email
-                })
-            })*/
-
-            /*console.log(`${user.Email} connected`);
-            console.log(`${user.Id} is the ID`);*/
-
             //receive messages (listen)
             ws.on("message", (message) => {
                 try {
-                    const data = JSON.parse(message.toString());
-
-                    //when a player connects to server
-                    if(data.type === "newPlayer"){
-                        console.log("my newPlayer action id is ", ws.id);
-                        gameState.players.push({ 
-                            tempId: ws.id,
-                            userId: ws.userId,
-                            x: 250, 
-                            y: 250, 
-                            width: 25, 
-                            height: 25 
-                        })
-                        console.log(gameState.players)
-                    }
+                    const data = JSON.parse(message);
 
                     //when some client makes a movement
                     if(data.type === "input"){
-                        let keys = Object.entries(data.keys)
-                        //console.log(keys);
-                        //currentKey = keys.filter((key) => key === true)
-                        //console.log(currentKey);
+                        //console.log(data)
+                        //to all clients
+                        broadcast(
+                            {
+                                type:"input",
+                                values: data//both clients at a time
+                            }
+                        )
+
+                    }
+
+                    if(data.type === "gameOver"){
+                        //console.log("GAME OVER");
+                        broadcast(
+                            {
+                                type:"gameOver",
+                                values: data
+                            }
+                        )
+                    }
+
+                    if(data.type === "spawnEnemy"){
+                        //enemies
+                        let newEnemy = spawnEnemy();
+                        broadcast(
+                            {
+                                type: "spawnEnemy",
+                                values: data,
+                                newEnemy
+                            }
+                        )
+                    }
+
+                    if(data.type === "bullet"){
+                        //bullets
+                        //console.log(data);
+                        broadcast(
+                            {
+                                type: "bullet",
+                                bullet: data.bullet
+                            }
+                        )
                     }
 
                     //when 1 player starts the game
@@ -170,6 +205,7 @@ const initializeWebSocket = (server) => {
                                 value: true
                             }
                         )
+
                     }
 
                     /*console.log(
@@ -178,29 +214,26 @@ const initializeWebSocket = (server) => {
                     );*/
 
                     //sending response as broadcast to all clients
-                    ws.on("message", (message) => {
-                        const data = JSON.parse(message.toString());
 
-                        if (data.type === "newPlayer") {
-                            console.log("Nuevo jugador:", ws.id);
+                    if (data.type === "newPlayer") {
+                        console.log("Nuevo jugador:", ws.id);
 
-                            //broadcast
-                            broadcast(
-                                {
-                                    type: "playerJoined", 
+                        //broadcast
+                        broadcast(
+                            {
+                                type: "playerJoined", 
+                                playerId: ws.id
+                            }
+                        );
+                        /*wss.clients.forEach((client) => {
+                            if (client.readyState === WebSocket.OPEN) {
+                                client.send(JSON.stringify({
+                                    type: "playerJoined",
                                     playerId: ws.id
-                                }
-                            );
-                            /*wss.clients.forEach((client) => {
-                                if (client.readyState === WebSocket.OPEN) {
-                                    client.send(JSON.stringify({
-                                        type: "playerJoined",
-                                        playerId: ws.id
-                                    }));
-                                }
-                            });*/
-                        }
-                    });
+                                }));
+                            }
+                        });*/
+                    }
 
                         /*
                     //if target exists and socket open (connected)

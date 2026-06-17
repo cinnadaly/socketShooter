@@ -1,3 +1,133 @@
+//SOCKET for game///////////////////////////////////////////////////////////
+const BASE_URL = "http://localhost:3000/api/";
+
+//socket client
+const socket = new WebSocket("ws://localhost:3000/ws");
+
+async function fetchLoggedUser() {
+  try {
+    const response = await fetch(`${BASE_URL}me`);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    //console.log(data);
+
+    return data;
+
+  } catch (error) {
+    console.error('Fetch failed:', error);
+  }
+}
+
+//open socket
+socket.onopen = async () => {
+    console.log("Connected cliented in game ");
+}
+
+//movement
+let keys = { 
+    left: false,//true 
+    right: false, //true
+    //up: false, 
+    //down: false 
+}; 
+
+let secondPlayerCurrentPosition = {}
+
+
+document.addEventListener("keydown", (e) => { 
+    if (e.key === "A") keys.left = true; 
+    if (e.key === "D") keys.right = true; 
+}); 
+
+document.addEventListener("keyup", (e) => { 
+    if (e.key === "A") keys.left = false; 
+    if (e.key === "D") keys.right = false; 
+}); 
+
+async function startGame() {
+    let playerInfo = await fetchLoggedUser();
+    let playerId = playerInfo.id;
+
+    localStorage.setItem("playerId", playerId);
+
+    //send list of first enemies
+
+    setInterval(() => {
+        if (socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({
+                type: "input",
+                playerId,
+                keys
+            }));
+        }
+    }, 1000 / 20); // 20 times per second
+
+    setInterval(() => {
+        spawnEnemy();
+    }, 2000)
+}
+
+//we receive
+socket.onmessage = async (event) => {
+    //data
+    const response = JSON.parse(event.data);
+    let playerId = localStorage.getItem("playerId")
+    const data = response; 
+
+    //console.log(data)
+
+    //response from server to input from client
+    if(data.type === "input"){
+        //movement
+        if(playerId !== data.values.playerId){
+            secondPlayerCurrentPosition = data.values.keys;
+            //secondPlayerMovement(data.values.keys);
+        }
+        //here you are going to update the other player, NOT YOURSELF
+        //your own movement is being executed by game.js
+    }
+
+    //game over (from server)
+    if(data.type === "gameOver"){
+        //gameOver = true;
+        showGameOver.call(updateScene);
+    }
+
+    //when server creates new enemy
+    if (data.type === "spawnEnemy") {
+        const enemy = createScene.add.rectangle(
+            data.newEnemy.x,
+            data.newEnemy.y,
+            50,
+            50,
+            0xff0000
+        );
+
+        enemies.push(enemy);
+    }
+
+    //we receive broadcast for new bullet
+    if (data.type === "bullet") {
+        const bullet = updateScene.add.rectangle(
+                data.bullet.x,
+                data.bullet.y,
+                5,
+                15,
+                0xffff00
+            );
+
+        bullets.push(bullet);
+    }
+
+
+}
+
+//GAME functions/////////////////////////////////////////////////////////////////////
+
 const config = {
     type: Phaser.AUTO,
     width: 500,
@@ -30,7 +160,14 @@ let gameOver = false;
 let gameOverText;
 let restartText;
 
+let updateScene; // context
+let createScene;
+
+
 function create() {
+
+    createScene = this;
+
     player = this.add.rectangle(
         250,
         620,
@@ -47,9 +184,11 @@ function create() {
         0x5555ff
     );
 
-    for (let i = 0; i < 5; i++) {
+    spawnEnemy();//create the first enemy
+
+    /*for (let i = 0; i < 5; i++) {
         spawnEnemy.call(this);
-    }
+    }*/
 
     cursors = this.input.keyboard.createCursorKeys();
 
@@ -93,14 +232,17 @@ function moveToLeft(){
 
 function secondPlayerMovement(movement){
     if (movement.left == true && secondPlayer.x > 25) {
-        secondPlayer.x -= 9;
+        secondPlayer.x -= 3;
     }else if(movement.right == true && secondPlayer.x < 475){
-        secondPlayer.x += 9;
+        secondPlayer.x += 3;
     }
 }
 
 function update() {
 
+    updateScene = this; //new context
+
+    secondPlayerMovement(secondPlayerCurrentPosition);
     moveToLeft();
     moveToRight();
 
@@ -115,7 +257,7 @@ function update() {
 
 
     if (Phaser.Input.Keyboard.JustDown(shootKey)){
-        const bullet =
+        /*const bullet =
             this.add.rectangle(
                 player.x,
                 player.y - 30,
@@ -124,7 +266,8 @@ function update() {
                 0xffff00
             );
 
-        bullets.push(bullet);
+        bullets.push(bullet);*/
+        shoot();
     }
 
     for (let i = bullets.length - 1; i >= 0; i--) {
@@ -145,7 +288,7 @@ function update() {
         if (enemies[i].y > 750) {
             enemies[i].destroy();
             enemies.splice(i, 1);
-            spawnEnemy.call(this);
+            //spawnEnemy.call(this);
         }
     }
 
@@ -159,7 +302,7 @@ function update() {
                 enemies.splice(i, 1);
                 bullets.splice(j, 1);
 
-                spawnEnemy.call(this);
+                //spawnEnemy.call(this);
                 score++;
 
                 scoreText.setText("Score: " + score + " A,D");
@@ -169,16 +312,45 @@ function update() {
         }
     }
 
+    //current player collides with enemy
     for (const enemy of enemies) {
-        if (isColliding(player, enemy)){
+        if (isColliding(player, enemy) || isColliding(secondPlayer, enemy)){
+            if (socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({
+                    type: "gameOver",
+                    score
+                }));
+            }
+
             showGameOver.call(this);
+
         }
     }
 
 }
 
-function spawnEnemy() {
+function spawnEnemy(){
+    if (socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({
+            type: "spawnEnemy"
+        }));
+    }
+}
 
+function shoot(){
+    if (socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({
+            type: "bullet",
+            bullet: {
+                x: player.x,
+                y: player.y - 30
+            }
+        }));
+    }
+}
+
+/*
+function spawnEnemy() {
     const enemy =
         this.add.rectangle(
             Phaser.Math.Between(
@@ -195,7 +367,7 @@ function spawnEnemy() {
         );
 
     enemies.push(enemy);
-}
+}*/
 
 function isColliding(a, b) {
 
@@ -276,10 +448,14 @@ function restart() {
     secondPlayer.x = 250;
     secondPlayer.y = 620;
 
-    for (let i = 0; i < 5; i++) {
+    /*for (let i = 0; i < 5; i++) {
         spawnEnemy.call(this);
-    }
+    }*/
 
     gameOverText.destroy();
     restartText.destroy();
 }
+
+
+
+startGame();
