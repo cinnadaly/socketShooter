@@ -15,16 +15,21 @@ const userNameSpan = document.querySelector("#userNameSpan");
     console.log("waiting for player to join.");
 }, 1000);*/
 
+btnStartGame.addEventListener("click", () => {
+    //trigger to server
+    gameStarted();
+})
+
 
 //we receive
 socket.onmessage = (event) => {
     //data
     const data = JSON.parse(event.data);
-    //display
-    console.log(`${data.type.toString()}`);
+    /*//display
+    console.log(`${data.type.toString()}`);*/
 
     //MAX LIMIT REACHED, we start the game
-    if(data.type === "startGame"){
+    if(data.type === "lobbyReady"){
         //stop the loading anim
         imgLoading.style.display = "none";
         /*//clear interval
@@ -54,8 +59,15 @@ socket.onmessage = (event) => {
         txtPlayerName.innerText = "Waiting for player"
         //text for status
         txtStatus.style.display = "none";
-
     }
+
+    //when 1 player started game, server broadcast this to all active clients
+    if(data.type === "gameStarted"){
+        window.location.href = "/game";
+    }
+
+    //player movement in real time
+
 }
 
 
@@ -93,6 +105,19 @@ setInterval(() => {
 //close socket 
 socket.onclose = () => {
     console.log("Disconnected");
+}
+
+//when 1 player starts game, hit this
+function gameStarted(){
+    try{
+        socket.send(JSON.stringify({
+            type: "gameStarted",
+            value: true
+        }))
+
+    }catch(err){
+        console.error(err);
+    }
 }
 
 //send message
