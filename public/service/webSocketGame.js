@@ -166,6 +166,9 @@ const config = {
     scene: {
         create,
         update
+    },
+    scale: {
+        autoCenter: Phaser.Scale.CENTER_BOTH
     }
 };
 

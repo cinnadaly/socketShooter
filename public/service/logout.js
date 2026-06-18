@@ -6,6 +6,7 @@ document.addEventListener("DOMContentLoaded", () => {
     btnLogout.addEventListener("click", async (e) => {
         try {
 
+        console.log("btnLogout")
             const response = await fetch(`${BASE_URL}logout`, {
                 method: "POST",
                 headers: {
