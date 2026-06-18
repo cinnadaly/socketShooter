@@ -16,7 +16,11 @@ router.get('/', (req, res) => {
 
 router.get('/game', authMiddleware, (req, res) => {
     // __dirname is the directory of the current script
-    res.render('pages/game')
+    res.render('pages/game',
+        {
+            user : req.user
+        }
+    )
 });
 
 router.get('/lobby', authMiddleware, async (req, res) => {
