@@ -142,6 +142,12 @@ socket.onmessage = async (event) => {
         enemies.push(enemy);
     }
 
+    //when enemy explodes, all clients hear
+    if (data.type === "enemyHit") {
+        explosionSound.play();
+    }
+
+
     //we receive broadcast for new bullet
     if (data.type === "bullet") {
         const bullet = updateScene.add.rectangle(
@@ -151,6 +157,9 @@ socket.onmessage = async (event) => {
             15,
             0xffff00
         );
+
+        //all clients hear the bullet
+        shootSound.play();
 
         bullets.push(bullet);
     }
@@ -164,6 +173,7 @@ const config = {
     height: 700,
     backgroundColor: "#000000",
     scene: {
+        preload,
         create,
         update
     },
@@ -171,6 +181,14 @@ const config = {
         autoCenter: Phaser.Scale.CENTER_BOTH
     }
 };
+
+//sounds and fx
+function preload() {
+    this.load.audio("shootSound", "assets/shoot.wav");
+    this.load.audio("explosionSound", "assets/explosion.wav");
+    this.load.image("player", "assets/player.PNG");
+    this.load.image("secondPlayer", "assets/secondPlayer.PNG");
+}
 
 new Phaser.Game(config);
 
@@ -196,26 +214,30 @@ let restartText;
 let updateScene; // context
 let createScene;
 
+let shootSound;
+let explosionSound;
+
 
 function create() {
 
     createScene = this;
 
-    player = this.add.rectangle(
-        250,
-        620,
-        50,
-        50,
-        0x00ff00
-    );
+    shootSound = this.sound.add("shootSound");
+    explosionSound = this.sound.add("explosionSound");
 
-    secondPlayer = this.add.rectangle(
+    player = this.add.image(
         250,
         620,
-        50,
-        50,
-        0x5555ff
+        "player"
     );
+    player.setDisplaySize(50, 50);
+
+    secondPlayer = this.add.image(
+        250,
+        620,
+        "secondPlayer"
+    );
+    secondPlayer.setDisplaySize(50, 50);
 
     spawnEnemy();//create the first enemy
 
@@ -342,6 +364,15 @@ function update() {
                 score++;
 
                 scoreText.setText("Score: " + score + " A,D");
+
+
+                //for enemy explosion sound as broadcast
+                if (socket.readyState === WebSocket.OPEN) {
+                    socket.send(JSON.stringify({
+                        type: "enemyHit"
+                    }));
+                }
+
 
                 break;
             }

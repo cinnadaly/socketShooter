@@ -274,6 +274,14 @@ const initializeWebSocket = (server) => {
 
                     }
 
+                    if(data.type === "enemyHit"){
+                        broadcast(
+                            {
+                                type: "enemyHit"
+                            }
+                        );
+                    }
+
                    
                     //sending response as broadcast to all clients
 
