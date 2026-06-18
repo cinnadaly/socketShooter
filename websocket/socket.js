@@ -6,6 +6,12 @@ const { msnodesqlv8 } = require("../config/db");
 let clients = {};
 let isGameStarted = false;
 
+//save partidas
+let currentGameId = null;
+
+//scores
+let gameScores = [];
+
 let enemies = [];
 
 //GAME functions from server (enemies and bullets)
@@ -39,7 +45,7 @@ const initializeWebSocket = (server) => {
     const MAX_CONNECTIONS = 2;
 
     //state of players
-    let gameState = { 
+    let gameState = {
         players: [
             {}
         ]
@@ -47,7 +53,7 @@ const initializeWebSocket = (server) => {
 
     //assign an id to the websocket connection (increase by)
     let nextId = 0;
-           
+
     //when user connects
     wss.on("connection", async (ws, req) => {
         console.log("socket io server started")
@@ -62,7 +68,7 @@ const initializeWebSocket = (server) => {
             }
 
             //if max connections limit reached, broadcast start the game
-            if(wss.clients.size === MAX_CONNECTIONS){
+            if (wss.clients.size === MAX_CONNECTIONS) {
                 broadcast(
                     {
                         type: "lobbyReady",
@@ -111,7 +117,7 @@ const initializeWebSocket = (server) => {
             if (!user) {
                 ws.send(JSON.stringify({
                     type: "error",
-                    message:"Email does not exist"
+                    message: "Email does not exist"
                 }));
                 return;
             }
@@ -119,7 +125,7 @@ const initializeWebSocket = (server) => {
                 ws.close();
                 return;
             }
-            
+
             //temp id from socket client
             ws.id = decoded.id;
             ws.userId = user.Id;
@@ -127,15 +133,15 @@ const initializeWebSocket = (server) => {
             ws.name = user.Username;
 
             const connectedUsers = Array.from(wss.clients)
-                console.log("---------------------------------------")
-                console.log("All USERS")
+            console.log("---------------------------------------")
+            console.log("All USERS")
             connectedUsers.forEach((user) => {
-                console.log(`ID: ${user.userId} Name ${user.name}`  )
+                console.log(`ID: ${user.userId} Name ${user.name}`)
             })
 
             const currentUser = connectedUsers.filter((u) => {
                 //console.log(u.userId, " and ", ws.userId)
-                if(u.userId == ws.userId){
+                if (u.userId == ws.userId) {
                     return true;
                 }
             })
@@ -144,34 +150,85 @@ const initializeWebSocket = (server) => {
             console.log("---------------------------------------")
 
             //receive messages (listen)
-            ws.on("message", (message) => {
+            ws.on("message", async (message) => {
                 try {
                     const data = JSON.parse(message);
 
                     //when some client makes a movement
-                    if(data.type === "input"){
+                    if (data.type === "input") {
                         //console.log(data)
                         //to all clients
                         broadcast(
                             {
-                                type:"input",
+                                type: "input",
                                 values: data//both clients at a time
                             }
                         )
 
                     }
 
-                    if(data.type === "gameOver"){
+                    if (data.type === "gameOver") {
                         //console.log("GAME OVER");
+                        //TEST TO SAVE GAME DATA
+
+                        gameScores.push({
+                            userId: ws.userId,
+                            score: data.score
+
+                        });
+
+                        if (gameScores.length === 2) {
+
+                            await msnodesqlv8.query`
+                            UPDATE Games
+                            SET ClosedAt = GETDATE()
+                            WHERE Id = ${currentGameId}
+                        `;
+                        }
+
+                        for (const player of gameScores) {
+
+                            console.log("Current Game ID:", currentGameId);
+
+                            //TEST
+                            console.log("INSERTANDO");
+                            console.log("ws.userId:", ws.userId);
+                            console.log("data.playerId:", data.playerId);
+                            console.log("score:", data.score);
+                            console.log("currentGameId:", currentGameId);
+
+                            await msnodesqlv8.query`
+                            INSERT INTO Scores
+                            (
+                                UserId,
+                                GameId,
+                                Score,
+                                CreatedAt
+                            )
+                            VALUES
+                            (
+                                ${ws.userId},
+                                ${currentGameId},
+                                ${data.score},
+                                GETDATE()
+                            )
+                        `;
+                        }
+
+
                         broadcast(
                             {
-                                type:"gameOver",
+                                type: "gameOver",
                                 values: data
                             }
                         )
+
+                        //clean
+                        gameScores = [];
+                        currentGameId = null;
                     }
 
-                    if(data.type === "spawnEnemy"){
+                    if (data.type === "spawnEnemy") {
                         //enemies
                         let newEnemy = spawnEnemy();
                         broadcast(
@@ -183,7 +240,7 @@ const initializeWebSocket = (server) => {
                         )
                     }
 
-                    if(data.type === "bullet"){
+                    if (data.type === "bullet") {
                         //bullets
                         //console.log(data);
                         broadcast(
@@ -196,8 +253,16 @@ const initializeWebSocket = (server) => {
 
                     //when 1 player starts the game
                     //broadcast the redirect to all clients for /game
-                    if(data.type === "gameStarted"){
+                    if (data.type === "gameStarted") {
+
                         isGameStarted = true;
+
+                        //SAVE PARTIDA
+                        const result = await msnodesqlv8.query`INSERT INTO Games (CreatedAt) 
+                        OUTPUT INSERTED.Id
+                        VALUES (GETDATE())`;
+                        currentGameId = result.recordset[0].Id;
+
                         //broadcast
                         broadcast(
                             {
@@ -205,6 +270,7 @@ const initializeWebSocket = (server) => {
                                 value: true
                             }
                         )
+
 
                     }
 
@@ -221,7 +287,7 @@ const initializeWebSocket = (server) => {
                         //broadcast
                         broadcast(
                             {
-                                type: "playerJoined", 
+                                type: "playerJoined",
                                 playerId: ws.id
                             }
                         );
@@ -235,24 +301,24 @@ const initializeWebSocket = (server) => {
                         });*/
                     }
 
-                        /*
-                    //if target exists and socket open (connected)
-                    if (target && target.readyState === WebSocket.OPEN) {
-                        //send message to receiver
-                        target.send(JSON.stringify({
-                            type: "message",
-                            from: data.from,
-                            to: data.to,
-                            text: data.text
-                        }));
-
-                    } else {
-                        //user offline
-                        ws.send(JSON.stringify({
-                            type: "error",
-                            message: "User not connected"
-                        }));
-                    }*/
+                    /*
+                //if target exists and socket open (connected)
+                if (target && target.readyState === WebSocket.OPEN) {
+                    //send message to receiver
+                    target.send(JSON.stringify({
+                        type: "message",
+                        from: data.from,
+                        to: data.to,
+                        text: data.text
+                    }));
+ 
+                } else {
+                    //user offline
+                    ws.send(JSON.stringify({
+                        type: "error",
+                        message: "User not connected"
+                    }));
+                }*/
 
                 } catch (error) {
                     console.log(error);
@@ -261,8 +327,8 @@ const initializeWebSocket = (server) => {
 
             //when user disconnects
             ws.on("close", () => {
-                console.log("NOW THE CLIENTS ARE: " ,wss.clients.size);
-                if(wss.clients.size < MAX_CONNECTIONS){
+                console.log("NOW THE CLIENTS ARE: ", wss.clients.size);
+                if (wss.clients.size < MAX_CONNECTIONS) {
                     wss.clients.forEach((client) => {
                         if (client.readyState === WebSocket.OPEN) {
                             client.send(JSON.stringify({
@@ -290,7 +356,7 @@ const initializeWebSocket = (server) => {
     });
 
     //custom broadcast
-    function broadcast(message){
+    function broadcast(message) {
         wss.clients.forEach((client) => {
             if (client.readyState === WebSocket.OPEN) {
                 client.send(JSON.stringify(

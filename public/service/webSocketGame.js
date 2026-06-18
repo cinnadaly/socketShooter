@@ -1,25 +1,32 @@
+//NOTA, SE MANDA DUPLICADO EL INSERT A DB DE LOS SCORES, MUST FIX
+
 //SOCKET for game///////////////////////////////////////////////////////////
+let playerId = null;
+let gameOverSent = false;
+
 const BASE_URL = "http://localhost:3000/api/";
 
 //socket client
+//NEW WS
 const socket = new WebSocket("ws://localhost:3000/ws");
 
 async function fetchLoggedUser() {
-  try {
-    const response = await fetch(`${BASE_URL}me`);
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
+    try {
+        ///get user
+        const response = await fetch(`${BASE_URL}me`);
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        //console.log(data);
+
+        return data;
+
+    } catch (error) {
+        console.error('Fetch failed:', error);
     }
-    
-    const data = await response.json();
-    //console.log(data);
-
-    return data;
-
-  } catch (error) {
-    console.error('Fetch failed:', error);
-  }
 }
 
 //open socket
@@ -28,35 +35,38 @@ socket.onopen = async () => {
 }
 
 //movement
-let keys = { 
+let keys = {
     left: false,//true 
     right: false, //true
     //up: false, 
     //down: false 
-}; 
+};
 
 let secondPlayerCurrentPosition = {}
 
 
-document.addEventListener("keydown", (e) => { 
-    if (e.key === "A") keys.left = true; 
-    if (e.key === "D") keys.right = true; 
-}); 
+document.addEventListener("keydown", (e) => {
+    if (e.key === "A") keys.left = true;
+    if (e.key === "D") keys.right = true;
+});
 
-document.addEventListener("keyup", (e) => { 
-    if (e.key === "A") keys.left = false; 
-    if (e.key === "D") keys.right = false; 
-}); 
+document.addEventListener("keyup", (e) => {
+    if (e.key === "A") keys.left = false;
+    if (e.key === "D") keys.right = false;
+});
 
 async function startGame() {
     let playerInfo = await fetchLoggedUser();
-    let playerId = playerInfo.id;
+    //SAVE PLAYER ID
+    playerId = playerInfo.id;
 
     localStorage.setItem("playerId", playerId);
 
     //send list of first enemies
 
-    setInterval(() => {
+    //INTERVAL
+    //CHANGE SENDING KEYS
+    /*setInterval(() => {
         if (socket.readyState === WebSocket.OPEN) {
             socket.send(JSON.stringify({
                 type: "input",
@@ -64,7 +74,20 @@ async function startGame() {
                 keys
             }));
         }
-    }, 1000 / 20); // 20 times per second
+    }, 1000 / 20); // 20 times per second */
+
+    setInterval(() => {
+        if (socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({
+                type: "input",
+                playerId,
+                player: {
+                    x: player.x,
+                    y: player.y
+                }
+            }));
+        }
+    }, 1000 / 20);
 
     setInterval(() => {
         spawnEnemy();
@@ -76,23 +99,32 @@ socket.onmessage = async (event) => {
     //data
     const response = JSON.parse(event.data);
     let playerId = localStorage.getItem("playerId")
-    const data = response; 
+    const data = response;
 
     //console.log(data)
 
+    //CHANGE TO TEST CURRENT POSITION
     //response from server to input from client
-    if(data.type === "input"){
+    /* if (data.type === "input") {
         //movement
-        if(playerId !== data.values.playerId){
+        if (playerId !== data.values.playerId) {
             secondPlayerCurrentPosition = data.values.keys;
             //secondPlayerMovement(data.values.keys);
         }
         //here you are going to update the other player, NOT YOURSELF
-        //your own movement is being executed by game.js
+        //your own movement is being executed by game.js  */
+
+    if (data.type === "input") {
+        if (playerId != data.values.playerId) {
+            //send the position values
+            secondPlayer.x = data.values.player.x;
+            secondPlayer.y = data.values.player.y;
+        }
     }
 
+
     //game over (from server)
-    if(data.type === "gameOver"){
+    if (data.type === "gameOver") {
         //gameOver = true;
         showGameOver.call(updateScene);
     }
@@ -113,17 +145,15 @@ socket.onmessage = async (event) => {
     //we receive broadcast for new bullet
     if (data.type === "bullet") {
         const bullet = updateScene.add.rectangle(
-                data.bullet.x,
-                data.bullet.y,
-                5,
-                15,
-                0xffff00
-            );
+            data.bullet.x,
+            data.bullet.y,
+            5,
+            15,
+            0xffff00
+        );
 
         bullets.push(bullet);
     }
-
-
 }
 
 //GAME functions/////////////////////////////////////////////////////////////////////
@@ -216,24 +246,26 @@ function create() {
     );
 }
 
-function moveToRight(){
+//PLAYER MOVEMENTS, EACH PLAYER MOVES THEMSELVES
+
+function moveToRight() {
     if (rightKey.isDown && player.x < 475) {
-    //if (player.x < 475) {
+        //if (player.x < 475) {
         player.x += 3;
     }
 }
 
-function moveToLeft(){
+function moveToLeft() {
     if (leftKey.isDown && player.x > 25) {
-    //if (player.x > 25) {
+        //if (player.x > 25) {
         player.x -= 3;
     }
 }
 
-function secondPlayerMovement(movement){
+function secondPlayerMovement(movement) {
     if (movement.left == true && secondPlayer.x > 25) {
         secondPlayer.x -= 3;
-    }else if(movement.right == true && secondPlayer.x < 475){
+    } else if (movement.right == true && secondPlayer.x < 475) {
         secondPlayer.x += 3;
     }
 }
@@ -242,7 +274,8 @@ function update() {
 
     updateScene = this; //new context
 
-    secondPlayerMovement(secondPlayerCurrentPosition);
+    //TEST
+    //secondPlayerMovement(secondPlayerCurrentPosition);
     moveToLeft();
     moveToRight();
 
@@ -256,7 +289,7 @@ function update() {
 
 
 
-    if (Phaser.Input.Keyboard.JustDown(shootKey)){
+    if (Phaser.Input.Keyboard.JustDown(shootKey)) {
         /*const bullet =
             this.add.rectangle(
                 player.x,
@@ -265,7 +298,7 @@ function update() {
                 15,
                 0xffff00
             );
-
+ 
         bullets.push(bullet);*/
         shoot();
     }
@@ -292,10 +325,10 @@ function update() {
         }
     }
 
-    for (let i = enemies.length - 1; i >= 0; i--){
-        for (let j = bullets.length - 1; j >= 0; j--){
+    for (let i = enemies.length - 1; i >= 0; i--) {
+        for (let j = bullets.length - 1; j >= 0; j--) {
 
-            if (isColliding(enemies[i], bullets[j])){
+            if (isColliding(enemies[i], bullets[j])) {
                 enemies[i].destroy();
                 bullets[j].destroy();
 
@@ -314,22 +347,32 @@ function update() {
 
     //current player collides with enemy
     for (const enemy of enemies) {
-        if (isColliding(player, enemy) || isColliding(secondPlayer, enemy)){
+        if (isColliding(player, enemy) || isColliding(secondPlayer, enemy)) {
             if (socket.readyState === WebSocket.OPEN) {
-                socket.send(JSON.stringify({
-                    type: "gameOver",
-                    score
-                }));
+                if (!gameOverSent) {
+
+                    gameOverSent = true;
+                    console.log("ENVIANDO GAME OVER", playerId, score);
+
+                    socket.send(JSON.stringify({
+                        type: "gameOver",
+                        playerId,
+                        score
+                    }));
+                }
+
+                showGameOver.call(this);
+
+                //TEST BREAK KAROL
+                break;
             }
-
-            showGameOver.call(this);
-
         }
-    }
 
+    }
 }
 
-function spawnEnemy(){
+//RANDOM
+function spawnEnemy() {
     if (socket.readyState === WebSocket.OPEN) {
         socket.send(JSON.stringify({
             type: "spawnEnemy"
@@ -337,7 +380,8 @@ function spawnEnemy(){
     }
 }
 
-function shoot(){
+//PLAYER SHOOTS
+function shoot() {
     if (socket.readyState === WebSocket.OPEN) {
         socket.send(JSON.stringify({
             type: "bullet",
@@ -365,7 +409,7 @@ function spawnEnemy() {
             50,
             0xff0000
         );
-
+ 
     enemies.push(enemy);
 }*/
 
@@ -373,26 +417,26 @@ function isColliding(a, b) {
 
     return (
         a.getBounds().x <
-            b.getBounds().x +
-            b.getBounds().width &&
+        b.getBounds().x +
+        b.getBounds().width &&
 
         a.getBounds().x +
-            a.getBounds().width >
-            b.getBounds().x &&
+        a.getBounds().width >
+        b.getBounds().x &&
 
         a.getBounds().y <
-            b.getBounds().y +
-            b.getBounds().height &&
+        b.getBounds().y +
+        b.getBounds().height &&
 
         a.getBounds().y +
-            a.getBounds().height >
-            b.getBounds().y
+        a.getBounds().height >
+        b.getBounds().y
     );
 }
 
 function showGameOver() {
 
-    if(gameOver){
+    if (gameOver) {
         return;
     }
 
@@ -422,6 +466,10 @@ function showGameOver() {
 }
 
 function restart() {
+
+    gameOver = false;
+    gameOverSent = false;
+
 
     score = 0;
 

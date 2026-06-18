@@ -3,6 +3,7 @@ let imgLoading = document.querySelector("#imgLoading");
 let txtStatus = document.querySelector("#txtStatus");
 let txtPlayerName = document.querySelector("#txtPlayerName");
 
+
 const BASE_URL = "http://localhost:3000/api/";
 
 btnStartGame.disabled = true;
@@ -17,7 +18,7 @@ const userNameSpan = document.querySelector("#userNameSpan");
 }, 1000);*/
 
 
-async function getUserLogged(){
+async function getUserLogged() {
     const response = await fetch(`${BASE_URL}me`, {
         method: "GET",
         credentials: "include",
@@ -26,7 +27,7 @@ async function getUserLogged(){
         }
     });
 
-    if(!response.ok){
+    if (!response.ok) {
         throw new Error(response.status);
     }
 
@@ -36,6 +37,7 @@ async function getUserLogged(){
     return data;
 }
 
+//SEND GAME STARTED TO SERVER
 btnStartGame.addEventListener("click", () => {
     //trigger to server
     gameStarted();
@@ -48,15 +50,15 @@ socket.onmessage = async (event) => {
     const data = JSON.parse(event.data);
     /*//display
     console.log(`${data.type.toString()}`);*/
-    
+
 
     //MAX LIMIT REACHED, we start the game
-    if(data.type === "lobbyReady"){
+    if (data.type === "lobbyReady") {
         //stop the loading anim
         imgLoading.style.display = "none";
         /*//clear interval
         clearInterval(intervalLoading);*/
-        console.log("WE START THE GAMEEE")
+        console.log("WE START THE GAME")
         //activate the start btn
         btnStartGame.disabled = false;
 
@@ -64,12 +66,12 @@ socket.onmessage = async (event) => {
         txtPlayerName.innerText = "Player 2"
         //text for status
         txtStatus.style.display = "flex";
-        //text for status
+        //text for status of GAME
         txtStatus.innerText = "Ready"
     }
 
     //when 1 player exits and the other stay
-    if(data.type === "waitingForPlayer"){
+    if (data.type === "waitingForPlayer") {
         //activate the loading anim
         imgLoading.style.display = "flex";
         //set interval
@@ -84,11 +86,13 @@ socket.onmessage = async (event) => {
     }
 
     //when 1 player started game, server broadcast this to all active clients
-    if(data.type === "gameStarted"){
+    if (data.type === "gameStarted") {
         user = await getUserLogged();
         console.log("user from gameStarted client ", user)
 
         sessionStorage.setItem("userId", user.id);
+
+        //both go at the same time to game screen
         window.location.href = "/game";
     }
 
@@ -104,21 +108,21 @@ socket.onclose = () => {
 }
 
 //when 1 player starts game, hit this
-function gameStarted(){
-    try{
+function gameStarted() {
+    try {
         socket.send(JSON.stringify({
             type: "gameStarted",
             value: true
         }))
 
-    }catch(err){
+    } catch (err) {
         console.error(err);
     }
 }
 
 //send message
-function sendMessage(){
-    try{
+function sendMessage() {
+    try {
 
         const currentUserName = userNameSpan.dataset.username;
         console.log(currentUserName);
@@ -137,7 +141,7 @@ function sendMessage(){
         }));
 
 
-    }catch(error){
+    } catch (error) {
         console.log(error);
     }
 }
