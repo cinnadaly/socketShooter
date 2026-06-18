@@ -1,7 +1,8 @@
 body {
   padding: 0px !important;
-  background-color: none !important;
+  background: none !important;
   height: auto;
+  min-height: 100vh;
 }
 
 html {

@@ -30,7 +30,11 @@ router.get('/lobby', authMiddleware, async (req, res) => {
 
 router.get('/profile', authMiddleware, (req, res) => {
     // __dirname is the directory of the current script
-    res.render('pages/profile')
+    res.render('pages/profile',
+        {
+            user : req.user
+        }
+    )
 });
 
 router.get('/register', (req, res) => {
