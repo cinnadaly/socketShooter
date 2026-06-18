@@ -274,11 +274,7 @@ const initializeWebSocket = (server) => {
 
                     }
 
-                    /*console.log(
-                        "MESSAGE:",
-                        data
-                    );*/
-
+                   
                     //sending response as broadcast to all clients
 
                     if (data.type === "newPlayer") {
