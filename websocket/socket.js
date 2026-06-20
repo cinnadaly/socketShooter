@@ -184,48 +184,57 @@ const initializeWebSocket = (server) => {
                             SET ClosedAt = GETDATE()
                             WHERE Id = ${currentGameId}
                         `;
-                        }
-
-                        for (const player of gameScores) {
-
-                            console.log("Current Game ID:", currentGameId);
-
-                            //TEST
-                            console.log("INSERTANDO");
-                            console.log("ws.userId:", ws.userId);
-                            console.log("data.playerId:", data.playerId);
-                            console.log("score:", data.score);
-                            console.log("currentGameId:", currentGameId);
-
-                            await msnodesqlv8.query`
-                            INSERT INTO Scores
-                            (
-                                UserId,
-                                GameId,
-                                Score,
-                                CreatedAt
-                            )
-                            VALUES
-                            (
-                                ${ws.userId},
-                                ${currentGameId},
-                                ${data.score},
-                                GETDATE()
-                            )
-                        `;
-                        }
 
 
-                        broadcast(
-                            {
-                                type: "gameOver",
-                                values: data
+                            for (const player of gameScores) {
+
+                                //console.log("Current Game ID:", currentGameId);
+
+                                //insert scores
+                                await msnodesqlv8.query`
+                                    INSERT INTO Scores
+                                    (
+                                        UserId,
+                                        GameId,
+                                        Score,
+                                        CreatedAt
+                                    )
+                                    VALUES
+                                    (
+                                        ${player.userId},
+                                        ${currentGameId},
+                                        ${player.score},
+                                        GETDATE()
+                                    )
+                                `;
+
+                                //insert BEST score
+                                //evaluar si es nulo se gaurda actual
+                                //si ya tenia scores, pero actual es mayor se guarda actual
+                                //si no se cumple lo anterior se queda como estaba
+                                await msnodesqlv8.query`
+                                UPDATE Users
+                                SET BestScore =
+                                CASE
+                                    WHEN BestScore IS NULL THEN ${player.score}
+                                    WHEN BestScore < ${player.score} THEN ${player.score}
+                                    ELSE BestScore
+                                END
+                                Where Id = ${player.userId}
+                                    `;
                             }
-                        )
 
-                        //clean
-                        gameScores = [];
-                        currentGameId = null;
+                            broadcast(
+                                {
+                                    type: "gameOver",
+                                    values: data
+                                }
+                            )
+
+                            //clean
+                            gameScores = [];
+                            currentGameId = null;
+                        }
                     }
 
                     if (data.type === "spawnEnemy") {
@@ -246,6 +255,7 @@ const initializeWebSocket = (server) => {
                         broadcast(
                             {
                                 type: "bullet",
+                                playerId: data.playerId,
                                 bullet: data.bullet
                             }
                         )
@@ -274,7 +284,7 @@ const initializeWebSocket = (server) => {
 
                     }
 
-                    if(data.type === "enemyHit"){
+                    if (data.type === "enemyHit") {
                         broadcast(
                             {
                                 type: "enemyHit"
@@ -282,7 +292,7 @@ const initializeWebSocket = (server) => {
                         );
                     }
 
-                   
+
                     //sending response as broadcast to all clients
 
                     if (data.type === "newPlayer") {
