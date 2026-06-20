@@ -1,5 +1,4 @@
-//NOTA, SE MANDA DUPLICADO EL INSERT A DB DE LOS SCORES, MUST FIX
-
+//game web socket
 //SOCKET for game///////////////////////////////////////////////////////////
 let playerId = null;
 let gameOverSent = false;
@@ -158,6 +157,8 @@ socket.onmessage = async (event) => {
             0xffff00
         );
 
+        //bullet must have owner
+        bullet.owner = data.playerId;
         //all clients hear the bullet
         shootSound.play();
 
@@ -353,27 +354,29 @@ function update() {
     for (let i = enemies.length - 1; i >= 0; i--) {
         for (let j = bullets.length - 1; j >= 0; j--) {
 
+            const bullet = bullets[j];
+
             if (isColliding(enemies[i], bullets[j])) {
+
+                const owner = bullet.owner;
+
                 enemies[i].destroy();
                 bullets[j].destroy();
 
                 enemies.splice(i, 1);
                 bullets.splice(j, 1);
 
+                if (owner == playerId) {
+                    score++;
+                    scoreText.setText("Score: " + score + " A,D");
+                }
                 //spawnEnemy.call(this);
-                score++;
-
-                scoreText.setText("Score: " + score + " A,D");
-
-
                 //for enemy explosion sound as broadcast
                 if (socket.readyState === WebSocket.OPEN) {
                     socket.send(JSON.stringify({
                         type: "enemyHit"
                     }));
                 }
-
-
                 break;
             }
         }
@@ -419,6 +422,7 @@ function shoot() {
     if (socket.readyState === WebSocket.OPEN) {
         socket.send(JSON.stringify({
             type: "bullet",
+            playerId,
             bullet: {
                 x: player.x,
                 y: player.y - 30
