@@ -3,8 +3,8 @@
 
 <head>
     <%- include('../partials/head'); %>
-    <title>Socket-shooter | Profile</title>
-    <link rel="stylesheet" href="../styles/profile.css">
+        <title>Socket-shooter | Profile</title>
+        <link rel="stylesheet" href="../styles/profile.css">
 </head>
 
 <body class="bg-none">
@@ -24,12 +24,13 @@
 
                             <form id="editProfileForm">
                                 <div class="text-center mb-4">
-                                    <h4 class="fw-bold">@<%= user.username %></h4>
+                                    <h4 class="fw-bold">@<%= user.username %>
+                                    </h4>
                                 </div>
 
                                 <div class="mb-3">
-                                    <input name='username' value="<%= user.username %>"
-                                        class="form-control" placeholder="Username" />
+                                    <input name='username' value="<%= user.username %>" class="form-control"
+                                        placeholder="Username" />
                                 </div>
                                 <div class="mb-3">
                                     <input name='email' value="<%= user.email %>" class="form-control"
@@ -37,11 +38,11 @@
                                 </div>
 
                                 <div class="mb-3">
-                                    <input name='password' type="password" value=""
-                                        class="form-control" placeholder="Password" />
+                                    <input name='password' type="password" value="" class="form-control"
+                                        placeholder="Password" />
                                 </div>
 
-                                <button type="submit" class="btn btn-dark w-100">
+                                <button type="submit" class="btn btn-primary w-100">
                                     Update my profile
                                 </button>
                             </form>

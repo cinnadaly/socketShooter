@@ -5,6 +5,10 @@ const { randomUUID } = require("crypto");
 const { msnodesqlv8 } = require("../config/db");
 let clients = {};
 let isGameStarted = false;
+let restarting = false;
+let gameFinished = false;
+//vote to restar game
+let restartVotes = [];
 
 //save partidas
 let currentGameId = null;
@@ -234,6 +238,7 @@ const initializeWebSocket = (server) => {
                             //clean
                             gameScores = [];
                             currentGameId = null;
+                            gameFinished = true;
                         }
                     }
 
@@ -313,6 +318,45 @@ const initializeWebSocket = (server) => {
                                 }));
                             }
                         });*/
+                    }
+
+                    //RESTART
+                    if (data.type === "restartGame") {
+                        console.log("Restart requested by", ws.userId);
+
+                        if (!gameFinished) {
+                            console.log("Game not finished");
+                            return;
+                        }
+
+                        if (!restartVotes.includes(ws.userId))
+                            restartVotes.push(ws.userId);
+
+                        console.log("Votes:", restartVotes);
+
+                        if (restartVotes.length === 2) {
+
+                            //clean enemy
+                            enemies = [];
+
+                            //new game
+                            const result = await msnodesqlv8.query`
+                            INSERT INTO Games (CreatedAt)
+                            OUTPUT INSERTED.Id
+                            VALUES (GETDATE())
+                        `;
+
+                            currentGameId = result.recordset[0].Id;
+
+                            //clean scores
+                            gameScores = [];
+                            gameFinished = false;
+
+                            broadcast({
+                                type: "restartGame"
+                            });
+                            //restarting = false;
+                        }
                     }
 
                     /*
