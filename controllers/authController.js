@@ -10,7 +10,7 @@ const login = async (req, res) => {
     try {
         //get login data
         const { username, password } = req.body;
-        console.log("user:", username, " with password:", password, "logged in")
+        console.log("user:", username, "logged in")
 
         //check fields
         if (!username || !password) {

@@ -128,6 +128,10 @@ socket.onmessage = async (event) => {
         showGameOver.call(updateScene);
     }
 
+    if (data.type === "restartGame") {
+        restart();
+    }
+
     //when server creates new enemy
     if (data.type === "spawnEnemy") {
         const enemy = createScene.add.rectangle(
@@ -305,10 +309,14 @@ function update() {
     moveToLeft();
     moveToRight();
 
-
     if (gameOver) {
-        if (Phaser.Input.Keyboard.JustDown(enterKey)) {
-            restart.call(this);
+        if (Phaser.Input.Keyboard.JustDown(enterKey) && socket.readyState === WebSocket.OPEN) {
+
+            console.log("ENTER PRESSED");
+
+            socket.send(JSON.stringify({
+                type: "restartGame"
+            }));
         }
         return;
     }
@@ -507,15 +515,10 @@ function restart() {
 
     gameOver = false;
     gameOverSent = false;
-
-
     score = 0;
-
     gameOver = false;
 
-    scoreText.setText(
-        "Score: 0 A,D"
-    );
+    scoreText.setText("Score: 0 A,D");
 
     for (const bullet of bullets) {
         bullet.destroy();
@@ -540,6 +543,7 @@ function restart() {
 
     gameOverText.destroy();
     restartText.destroy();
+    spawnEnemy();
 }
 
 
