@@ -2,6 +2,7 @@
 //SOCKET for game///////////////////////////////////////////////////////////
 let playerId = null;
 let gameOverSent = false;
+let clientVoted = false;
 
 const BASE_URL = "http://localhost:3000/api/";
 
@@ -310,14 +311,26 @@ function update() {
     moveToRight();
 
     if (gameOver) {
-        if (Phaser.Input.Keyboard.JustDown(enterKey) && socket.readyState === WebSocket.OPEN) {
+
+        
+
+        /*if (Phaser.Input.Keyboard.JustDown(enterKey) && socket.readyState === WebSocket.OPEN) {
 
             console.log("ENTER PRESSED");
 
             socket.send(JSON.stringify({
                 type: "restartGame"
             }));
+        }*/
+
+        if(clientVoted == true){
+            console.log("client voted from view");
+            socket.send(JSON.stringify({
+                type: "restartGame"
+            }));
+            clientVoted = false;
         }
+
         return;
     }
 
@@ -365,6 +378,7 @@ function update() {
             const bullet = bullets[j];
 
             if (isColliding(enemies[i], bullets[j])) {
+                console.log("ENEMY HITTTTT")
 
                 const owner = bullet.owner;
 
@@ -481,14 +495,32 @@ function isColliding(a, b) {
 }
 
 function showGameOver() {
-
     if (gameOver) {
         return;
     }
 
     gameOver = true;
 
-    gameOverText =
+    //animation for votes after game over
+    Swal.fire({
+        title: "Game Over",
+        text: "Vote for restart?",
+        icon: undefined,
+        confirmButtonText: "Retry",
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        allowEnterKey: false,
+        background: "#1b2735",
+        color: "#ffffff",
+        confirmButtonColor: "#1e90ff",
+        html: `
+            <div style="height: 150px">
+                <img width="350" src="../assets/explosion.PNG" />
+                <!--<img height="150" src="https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/aebb45ff-108b-48c9-b5ff-7cfcacf68232/df10yp9-09aefc5b-31b0-40c9-8ae2-0f9818499813.gif?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiIvZi9hZWJiNDVmZi0xMDhiLTQ4YzktYjVmZi03Y2ZjYWNmNjgyMzIvZGYxMHlwOS0wOWFlZmM1Yi0zMWIwLTQwYzktOGFlMi0wZjk4MTg0OTk4MTMuZ2lmIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmZpbGUuZG93bmxvYWQiXX0.ED0-b6_K4EqrYuk-lkfcafU_x3l5CHsz73ouzVbWssU" />-->
+            </div>`
+    }).then((data) => { clientVoted = true;});
+
+    /*gameOverText =
         this.add.text(
             70,
             300,
@@ -508,7 +540,7 @@ function showGameOver() {
                 fontSize: "28px",
                 color: "#ffffff"
             }
-        );
+        );*/
 }
 
 function restart() {
