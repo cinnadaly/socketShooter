@@ -112,7 +112,7 @@ function gameStarted() {
     try {
         socket.send(JSON.stringify({
             type: "gameStarted",
-            value: true
+            score: 0
         }))
 
     } catch (err) {
