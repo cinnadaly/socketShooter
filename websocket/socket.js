@@ -82,7 +82,7 @@ const initializeWebSocket = (server) => {
         //wss.clients.forEach((client) => console.log(client.Email))
         try {
             // Check if the limit is exceeded
-            
+
             /*if (wss.clients.size > MAX_CONNECTIONS) {
                 ws.close(1013, "Service temporarily overloaded, max connections reached.");
                 return;
@@ -318,7 +318,7 @@ const initializeWebSocket = (server) => {
                     if (data.type === "enemyHit") {
                         //when enemy eliminated, update scores
                         gameScores.forEach((user, index) => {
-                            if(user.userId === ws.userId){
+                            if (user.userId === ws.userId) {
                                 console.log("ws.id: ", ws.userId);
                                 console.log("previous score: ", gameScores[index].score);
                                 gameScores[index].score += 1;
@@ -399,6 +399,8 @@ const initializeWebSocket = (server) => {
                         }
                     }
 
+
+
                     /*
                 //if target exists and socket open (connected)
                 if (target && target.readyState === WebSocket.OPEN) {
@@ -445,13 +447,13 @@ const initializeWebSocket = (server) => {
                  console.log(`${user.Email} disconnected`);
              }); */
 
-             async function updateGameIfDisconnected(){
+            async function updateGameIfDisconnected() {
                 await msnodesqlv8.query(`
                     UPDATE Games
                     SET ClosedAt = GETDATE()
                     WHERE Id = ${currentGameId}
                 `);
-             }
+            }
             //when user disconnects
             ws.on("close", async () => {
                 console.log("Player disconnected");
@@ -471,11 +473,11 @@ const initializeWebSocket = (server) => {
                     console.log("current player score: ", currentPlayerScore);
 
                     //for (const player of gameScores) {
-                     //   if(player.userId == ws.userId){
-                            console.log("entra en el for")
-                            //console.log(player.userId, " - ", currentGameId)
-                            try{
-                                await msnodesqlv8.query(`
+                    //   if(player.userId == ws.userId){
+                    console.log("entra en el for")
+                    //console.log(player.userId, " - ", currentGameId)
+                    try {
+                        await msnodesqlv8.query(`
                                 INSERT INTO Scores
                                 (
                                     UserId,
@@ -490,10 +492,10 @@ const initializeWebSocket = (server) => {
                                     ${currentPlayerScore[0].score},
                                     GETDATE()
                                 )`);
-                            }catch (err) {
-                                console.error(err);
-                            }
-                      //  }
+                    } catch (err) {
+                        console.error(err);
+                    }
+                    //  }
                     //let myself = gameScores.filter((player) => player.userId === ws.userId)
                     //console.log("myself is ")
                     //}

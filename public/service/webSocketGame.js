@@ -3,6 +3,7 @@
 let playerId = null;
 let gameOverSent = false;
 let clientVoted = false;
+let playerDisconnected = false;
 
 const BASE_URL = "http://localhost:3000/api/";
 
@@ -131,6 +132,11 @@ socket.onmessage = async (event) => {
 
     if (data.type === "restartGame") {
         restart();
+    }
+
+    //player leaves
+    if (data.type === "playerDisconnected") {
+        showPlayerDisconnected();
     }
 
     //when server creates new enemy
@@ -312,7 +318,7 @@ function update() {
 
     if (gameOver) {
 
-        
+
 
         /*if (Phaser.Input.Keyboard.JustDown(enterKey) && socket.readyState === WebSocket.OPEN) {
 
@@ -323,7 +329,7 @@ function update() {
             }));
         }*/
 
-        if(clientVoted == true){
+        if (clientVoted == true) {
             console.log("client voted from view");
             socket.send(JSON.stringify({
                 type: "restartGame"
@@ -518,7 +524,7 @@ function showGameOver() {
                 <img width="350" src="../assets/explosion.PNG" />
                 <!--<img height="150" src="https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/aebb45ff-108b-48c9-b5ff-7cfcacf68232/df10yp9-09aefc5b-31b0-40c9-8ae2-0f9818499813.gif?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiIvZi9hZWJiNDVmZi0xMDhiLTQ4YzktYjVmZi03Y2ZjYWNmNjgyMzIvZGYxMHlwOS0wOWFlZmM1Yi0zMWIwLTQwYzktOGFlMi0wZjk4MTg0OTk4MTMuZ2lmIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmZpbGUuZG93bmxvYWQiXX0.ED0-b6_K4EqrYuk-lkfcafU_x3l5CHsz73ouzVbWssU" />-->
             </div>`
-    }).then((data) => { clientVoted = true;});
+    }).then((data) => { clientVoted = true; });
 
     /*gameOverText =
         this.add.text(
@@ -579,5 +585,55 @@ function restart() {
 }
 
 
+function showPlayerDisconnected() {
+    if (playerDisconnected)
+        return;
+
+    playerDisconnected = true;
+    gameOver = true;
+
+    //no enemies nor bullets
+    for (const enemy of enemies) {
+        enemy.destroy();
+    }
+    enemies = [];
+
+    for (const bullet of bullets) {
+        bullet.destroy();
+    }
+    bullets = [];
+
+    //animation for restart
+    Swal.fire({
+        title: "Player 2 left",
+        text: "The other player disconnected.",
+        icon: undefined,
+        confirmButtonText: "Return to lobby",
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        allowEnterKey: false,
+        background: "#1b2735",
+        color: "#ffffff",
+        confirmButtonColor: "#1e90ff",
+        html: `
+            <div style="height: 150px">
+             <p>
+                The match has ended because the other player left.
+            </p>
+            <img width="200" src="https://img.itch.zone/aW1hZ2UvMTgzOTY2MS8xMDgxMjIwNS5naWY=/original/DCgmR1.gif" />
+               
+            </div>`
+    }).then(() => {
+
+        //close ws
+        if (socket.readyState === WebSocket.OPEN) {
+            socket.close();
+        }
+
+        //go back to lobby
+        window.location.href = "../lobby/lobby.html";
+
+    });
+}
 
 startGame();
