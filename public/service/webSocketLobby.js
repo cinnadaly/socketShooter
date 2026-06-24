@@ -92,6 +92,7 @@ socket.onmessage = async (event) => {
 
         sessionStorage.setItem("userId", user.id);
 
+        console.log("REDIRECTING TO GAME");
         //both go at the same time to game screen
         window.location.href = "/game";
     }
