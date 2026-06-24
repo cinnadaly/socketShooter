@@ -4,21 +4,19 @@ const jwt = require("jsonwebtoken");
 const { randomUUID } = require("crypto");
 const { msnodesqlv8 } = require("../config/db");
 let clients = {};
-let isGameStarted = false;
-//let restarting = false;
-let gameFinished = false;
-//vote to restar game
+
 let restartVotes = [];
-
-//save partidas
-let currentGameId = null;
-
-//scores
-let gameScores = [];
-
-let enemies = [];
-
 let permissionForScores = false;
+let scoresSaved = false;
+
+let gameState = {
+    started: false,
+    finished: false,
+    gameId: null,
+    players: [],
+    enemies: [],
+    gameToken: null
+};
 
 //GAME functions from server (enemies and bullets)
 
@@ -43,14 +41,12 @@ async function voteRestart() {
 }
 
 function spawnEnemy() {
-
     const enemy = {
-        id: crypto.randomUUID(),
+        id: randomUUID(),
         x: randomBetween(25, 475),
         y: randomBetween(-500, -50)
     };
-
-    enemies.push(enemy);
+    gameState.enemies.push(enemy);
     return enemy;
 }
 
@@ -63,15 +59,7 @@ const initializeWebSocket = (server) => {
     });
 
     //socket connections
-    //let activeConnections = 0;
     const MAX_CONNECTIONS = 2;
-
-    //state of players
-    let gameState = {
-        players: [
-            {}
-        ]
-    }
 
     //assign an id to the websocket connection (increase by)
     let nextId = 0;
@@ -79,19 +67,19 @@ const initializeWebSocket = (server) => {
     //when user connects
     wss.on("connection", async (ws, req) => {
         console.log("socket io server started")
-        if(isGameStarted){
-            permissionForScores = true;
-        }
 
-        //console.log(wss)
-        //wss.clients.forEach((client) => console.log(client.Email))
+        //if(gameState.started){
+            permissionForScores = true;
+        //}
+
+        scoresSaved = false;
+
         try {
             // Check if the limit is exceeded
-
-            /*if (wss.clients.size > MAX_CONNECTIONS) {
+            if (wss.clients.size > MAX_CONNECTIONS) {
                 ws.close(1013, "Service temporarily overloaded, max connections reached.");
                 return;
-            }*/
+            }
 
             //if max connections limit reached, broadcast start the game
             if (wss.clients.size === MAX_CONNECTIONS) {
@@ -101,14 +89,6 @@ const initializeWebSocket = (server) => {
                         value: true
                     }
                 )
-                /*wss.clients.forEach((client) => {
-                    if (client.readyState === WebSocket.OPEN) {
-                        client.send(JSON.stringify({
-                            type: "startGame",
-                            value: true
-                        }))
-                    }
-                })*/
             }
             console.log(`New connection established. Total: ${wss.clients.size}`);
 
@@ -158,22 +138,25 @@ const initializeWebSocket = (server) => {
             ws.email = user.Email;
             ws.name = user.Username;
 
-            const connectedUsers = Array.from(wss.clients)
-            /*console.log("---------------------------------------")
-            console.log("All USERS")
-            /connectedUsers.forEach((user) => {
-                console.log(`ID: ${user.userId} Name ${user.name}`)
-            })*/
+            //remove duplicated players
+            const alreadyExists = gameState.players.find(
+                p => p.userId === ws.userId
+            );
 
-            const currentUser = connectedUsers.filter((u) => {
+            if (!alreadyExists) {
+                gameState.players.push({
+                    userId: ws.userId,
+                    username: ws.name,
+                    score: 0
+                });
+            }
+
+            /*const currentUser = connectedUsers.filter((u) => {
                 //console.log(u.userId, " and ", ws.userId)
                 if (u.userId == ws.userId) {
                     return true;
                 }
-            })
-            /*console.log("\n\nCURRENT USER")
-            console.log(currentUser[0].userId);
-            console.log("---------------------------------------")*/
+            })*/
 
             //receive messages (listen)
             ws.on("message", async (message) => {
@@ -194,25 +177,24 @@ const initializeWebSocket = (server) => {
                     }
 
                     if (data.type === "gameOver") {
-                        //console.log("GAME OVER");
-                        //TEST TO SAVE GAME DATA
+                        console.log("GAME OVER");
+                        console.log("players quantity: ", gameState.players.length);
+                        if (gameState.players.length === 2){
 
-                        /*gameScores.push({
-                            userId: ws.userId,
-                            score: data.score
+                            //verify if scores has been saved before
+                            if (scoresSaved) {
+                                return;
+                            }
+                            scoresSaved = true;
 
-                        });*/
-
-                        if (gameScores.length === 2) {
                             //console.log("gameScores.length is 2")
                             await msnodesqlv8.query`
                             UPDATE Games
                             SET ClosedAt = GETDATE()
-                            WHERE Id = ${currentGameId}
+                            WHERE Id = ${gameState.gameId}
                         `;
 
-
-                            for (const player of gameScores) {
+                            for (const player of gameState.players) {
 
                                 //console.log("Current Game ID:", currentGameId);
 
@@ -228,16 +210,13 @@ const initializeWebSocket = (server) => {
                                     VALUES
                                     (
                                         ${player.userId},
-                                        ${currentGameId},
+                                        ${gameState.gameId},
                                         ${player.score},
                                         GETDATE()
                                     )
                                 `;
 
                                 //insert BEST score
-                                //evaluar si es nulo se gaurda actual
-                                //si ya tenia scores, pero actual es mayor se guarda actual
-                                //si no se cumple lo anterior se queda como estaba
                                 await msnodesqlv8.query`
                                 UPDATE Users
                                 SET BestScore =
@@ -251,16 +230,36 @@ const initializeWebSocket = (server) => {
                             }
 
                             //clean
-                            gameScores = [];
-                            currentGameId = null;
-                            gameFinished = true;
+                            //gameScores = [];
+                            gameState.gameId = null;
+                            gameState.finished = true;
+                            console.log(gameState.players);
 
+                            Array.from(wss.clients).forEach((client, index) => {
+                                client.send(JSON.stringify({
+                                    type: "gameOver",
+                                    score: gameState.players[index].score,
+                                    values: data
+                                }))
+                            });
+
+                            /*wss.clients.forEach((client, index) => {
+                                client.send(JSON.stringify({
+                                    type: "gameOver",
+                                    score: gameState.players[index].score,
+                                    values: data
+                                }))*/
+                               /*console.log(index);
+                            })*/
+
+                            /*
                             broadcast(
                                 {
                                     type: "gameOver",
+                                    score: gameState.players[0].score,
                                     values: data
                                 }
-                            )
+                            )*/
 
                         }
                     }
@@ -292,47 +291,42 @@ const initializeWebSocket = (server) => {
                     //when 1 player starts the game
                     //broadcast the redirect to all clients for /game
                     if (data.type === "gameStarted") {
-                        isGameStarted = true;
-
-                        connectedUsers.forEach((user) => {
-                            //console.log(`ID: ${user.userId} Name ${user.name}`)
-                            gameScores.push({
-                                userId: user.userId,//current client
-                                score: data.score//0
-                            });
-                        })
-
+                        gameState.started = true;
+                        gameState.finished = false;
+                        //unique token for current game 
+                        gameState.token = randomUUID();
+                        //restart the score for all players
+                        gameState.players.forEach(player => {
+                            player.score = 0;
+                        });
                         //SAVE PARTIDA
                         const result = await msnodesqlv8.query`INSERT INTO Games (CreatedAt) 
                         OUTPUT INSERTED.Id
                         VALUES (GETDATE())`;
-                        currentGameId = result.recordset[0].Id;
+                        gameState.gameId = result.recordset[0].Id;
 
-                        console.log("game started: ", currentGameId);
+                        console.log("game started: ", gameState.gameId);
                         //broadcast
                         broadcast(
                             {
                                 type: "gameStarted",
+                                token: gameState.token,
                                 value: true
                             }
                         )
-
-
                     }
 
                     if (data.type === "enemyHit") {
-                        //when enemy eliminated, update scores
-                        gameScores.forEach((user, index) => {
-                            if (user.userId === ws.userId) {
-                                console.log("ws.id: ", ws.userId);
-                                console.log("previous score: ", gameScores[index].score);
-                                gameScores[index].score += 1;
-                                console.log("AFTER score: ", gameScores[index].score);
-                            }
-                        });
+                        //when enemy eliminated, update score for the client that made the kill
+                        const player = gameState.players.find(
+                            p => p.userId === data.playerId
+                        )
 
-                        console.log("NEW SCORE: ", gameScores)
-
+                        if (player) {
+                            player.score = data.score
+                        }
+                        console.log(player);
+                        //for hit sound
                         broadcast(
                             {
                                 type: "enemyHit"
@@ -340,9 +334,7 @@ const initializeWebSocket = (server) => {
                         );
                     }
 
-
                     //sending response as broadcast to all clients
-
                     if (data.type === "newPlayer") {
                         //console.log("Nuevo jugador:", ws.id);
 
@@ -353,21 +345,15 @@ const initializeWebSocket = (server) => {
                                 playerId: ws.id
                             }
                         );
-                        /*wss.clients.forEach((client) => {
-                            if (client.readyState === WebSocket.OPEN) {
-                                client.send(JSON.stringify({
-                                    type: "playerJoined",
-                                    playerId: ws.id
-                                }));
-                            }
-                        });*/
                     }
 
                     //RESTART
                     if (data.type === "restartGame") {
-                        //console.log("Restart requested by", ws.userId);
 
-                        if (!gameFinished) {
+                        scoresSaved = false;
+
+                        console.log("gameSTATE FINISHED: ", gameState.finished);
+                        if (!gameState.finished) {
                             console.log("Game not finished");
                             return;
                         }
@@ -375,12 +361,12 @@ const initializeWebSocket = (server) => {
                         if (!restartVotes.includes(ws.userId))
                             restartVotes.push(ws.userId);
 
-                        //console.log("Votes:", restartVotes);
+                        console.log("Votes:", restartVotes);
 
                         if (restartVotes.length === 2) {
 
                             //clean enemy
-                            enemies = [];
+                            gameState.enemies = [];
 
                             //new game
                             const result = await msnodesqlv8.query`
@@ -389,23 +375,88 @@ const initializeWebSocket = (server) => {
                             VALUES (GETDATE())
                         `;
 
-                            currentGameId = result.recordset[0].Id;
+                            gameState.gameId = result.recordset[0].Id;
 
-                            //clean scores
-                            gameScores = [];
-                            gameFinished = false;
+                            //clean current scores
+                            gameState.players.forEach(player => {
+                                player.score = 0;
+                            });
+                            gameState.finished = false;
 
                             broadcast({
                                 type: "restartGame"
                             });
 
                             restartVotes = [];
-                            //restarting = false;
                         }
                     }
 
+                    //when any player disconnects, game is over and scores are registered
+                    if(data.type === "playerDisconnected"){
+                        console.log("TRIED TO MAKE THE SCORE REGISTER: ", wss.clients.size)
+                        console.log("only 1 CLIENTS");
+                        console.log("permission is: ", permissionForScores);
+                        console.log("scoresSaved is: ", scoresSaved);
 
+                        if (gameState.gameId !== null && permissionForScores === true) {
+                            console.log("the game ID: ", gameState.gameId)
+                            console.log( "SCORES: ", gameState.players);
 
+                            if (scoresSaved) {
+                                return;
+                            }
+
+                            scoresSaved = true;
+
+                            for (const player of gameState.players) {
+                            //   if(player.userId == ws.userId){
+                                    //console.log(player.userId, " - ", currentGameId)
+                                    try{
+                                        await msnodesqlv8.query(`
+                                        INSERT INTO Scores
+                                        (
+                                            UserId,
+                                            GameId,
+                                            Score,
+                                            CreatedAt
+                                        )
+                                        VALUES
+                                        (
+                                            ${player.userId},
+                                            ${gameState.gameId},
+                                            ${player.score},
+                                            GETDATE()
+                                        )`);
+                                        console.log("SCORES REGISTERED FOR DISCONNECTION")
+                                    }catch (err) {
+                                        console.error(err);
+                                    }
+                            }
+
+                            await msnodesqlv8.query(`
+                                UPDATE Games
+                                SET ClosedAt = GETDATE()
+                                WHERE Id = ${gameState.gameId}
+                            `);
+
+                            //currentGameId = null;
+                            gameState.finished = true;
+                            //gameScores = [];
+                            restartVotes = [];
+                            enemies = [];
+                            gameState.token = null;
+
+                            gameState.players = gameState.players.filter(
+                                player => player.userId !== ws.userId
+                            );
+
+                            console.log("---------------------------------------------------------------------")
+                        }
+                       
+                        broadcast({
+                            type: "playerDisconnected"
+                        });
+                    }
                     /*
                 //if target exists and socket open (connected)
                 if (target && target.readyState === WebSocket.OPEN) {
@@ -424,129 +475,32 @@ const initializeWebSocket = (server) => {
                         message: "User not connected"
                     }));
                 }*/
-
                 } catch (error) {
                     console.log(error);
                 }
             });
 
-            /* //when user disconnects
-             ws.on("close", () => {
-                 console.log("NOW THE CLIENTS ARE: ", wss.clients.size);
-                 if (wss.clients.size < MAX_CONNECTIONS) {
-                     wss.clients.forEach((client) => {
-                         if (client.readyState === WebSocket.OPEN) {
-                             client.send(JSON.stringify({
-                                 type: "waitingForPlayer",
-                                 value: true
-                             }))
-                         }
-                     })
-                 }
- 
-                 //remove from connected users
-                 delete clients[
-                     user.Email.toLowerCase()
-                 ];
- 
-                 console.log(`${user.Email} disconnected`);
-             }); */
-
-            async function updateGameIfDisconnected() {
-                await msnodesqlv8.query(`
-                    UPDATE Games
-                    SET ClosedAt = GETDATE()
-                    WHERE Id = ${currentGameId}
-                `);
-            }
             //when user disconnects
             ws.on("close", async () => {
 
-                console.log("CLOSE", ws.userId, new Date().toISOString());
-
-                console.log("player disconnected with: ", currentGameId)
-                console.log("NOW THE CLIENTS ARE: ", wss.clients.size);
-
-                if (currentGameId !== null && permissionForScores == true) {
-                    console.log("the game ID: ", currentGameId)
-
-                    //console.log(gameScores);
-
-                    let currentPlayerScore = gameScores.filter((gameScore) => {
-                        return gameScore.userId == ws.userId;
-                    });
-
-                    console.log("current disconnected player score: ", currentPlayerScore);
-
-                    for (const player of gameScores) {
-                     //   if(player.userId == ws.userId){
-                            //console.log(player.userId, " - ", currentGameId)
-                            try{
-                                await msnodesqlv8.query(`
-                                INSERT INTO Scores
-                                (
-                                    UserId,
-                                    GameId,
-                                    Score,
-                                    CreatedAt
-                                )
-                                VALUES
-                                (
-                                    ${player.userId},
-                                    ${currentGameId},
-                                    ${player.score},
-                                    GETDATE()
-                                )`);
-                                console.log("SCORES REGISTERED FOR DISCONNECTION")
-                            }catch (err) {
-                                console.error(err);
-                            }
-                    }
-                    //let myself = gameScores.filter((player) => player.userId === ws.userId)
-                    //console.log("myself is ")
-                    //}
-
-
-                    await msnodesqlv8.query(`
-                        UPDATE Games
-                        SET ClosedAt = GETDATE()
-                        WHERE Id = ${currentGameId}
-                    `);
-
-                    //currentGameId = null;
-                    gameFinished = true;
-                    gameScores = [];
-                    restartVotes = [];
-                    enemies = [];
-                    /*broadcast({
-                        type: "playerDisconnected"
-                    });*/
-
-                }
-
-                //broadcast({ type: "playerDisconnected" });
-                /* gameScores = [];
-                 restartVotes = [];
-                 gameFinished = false;
-                 enemies = [];*/
-
-                /*if (wss.clients.size < MAX_CONNECTIONS) {
+                //console.log("CLOSED PLAYER", ws.userId, new Date().toISOString());
+               
+                if (wss.clients.size < MAX_CONNECTIONS) {
                     wss.clients.forEach((client) => {
                         if (client.readyState === WebSocket.OPEN) { 
                             client.send(JSON.stringify({ type: "waitingForPlayer", value: true })) 
                         }
                     })
-                }*/
+                }
+
                 //remove from connected users
-                delete clients[
+                /*delete clients[
                     user.Email.toLowerCase()
-                ];
+                ];*/
                 console.log(`${user.Email} disconnected`);
             });
         } catch (error) {
-
             console.log(error.message);
-
             ws.close();
         }
     });
@@ -556,9 +510,7 @@ const initializeWebSocket = (server) => {
         wss.clients.forEach((client) => {
             if (client.readyState === WebSocket.OPEN) {
                 client.send(JSON.stringify(
-
                     message
-
                 ))
             }
         })
@@ -568,6 +520,7 @@ const initializeWebSocket = (server) => {
 
 
 module.exports = {
-    initializeWebSocket
+    initializeWebSocket,
+    gameState
 };
 

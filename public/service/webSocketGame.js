@@ -5,6 +5,8 @@ let gameOverSent = false;
 let clientVoted = false;
 let playerDisconnected = false;
 
+let btnQuitGame = document.querySelector("#btnQuitGame");
+
 const BASE_URL = "http://localhost:3000/api/";
 
 //socket client
@@ -39,11 +41,66 @@ socket.onopen = async () => {
 let keys = {
     left: false,//true 
     right: false, //true
-    //up: false, 
-    //down: false 
 };
 
 let secondPlayerCurrentPosition = {}
+
+
+//in case the user just moves to another url manually
+function handleRouteChange() {
+    const currentPath = window.location.pathname;
+    if (previousPath === "/game" && currentPath !== "/game") {
+        console.log("Saliendo de /game");
+        socket.send(JSON.stringify({
+            type: "leaveGame"
+        }));
+        socket.close();
+    }else{
+    }
+    previousPath = currentPath;
+}
+window.addEventListener("popstate", handleRouteChange);
+
+
+//when any player disconnects, tell the server to save the scores
+btnQuitGame.addEventListener("click", (e) => {
+
+    //animation for restart
+    Swal.fire({
+        title: "Quit game",
+        text: "The game will be finished.",
+        showCancelButton: true,
+        confirmButtonText: "Return to lobby",
+        cancelButtonText: "Stay in game",
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        background: "#1b2735",
+        color: "#ffffff",
+        html: `
+            <div style="height: 150px">
+            <p>
+                The game will be finished.
+            </p>
+            <img width="200" src="https://img.itch.zone/aW1hZ2UvMTgzOTY2MS8xMDgxMjIwNS5naWY=/original/DCgmR1.gif" />
+               
+            </div>`
+    }).then((result) => {
+        if(result.isConfirmed){
+
+
+            alert("player disconnected")
+            if (socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({
+                    type: "playerDisconnected"
+                }));
+            }
+        }
+        if(result.isDismissed){
+            console.log("continue the game")
+        }
+    });
+
+})
 
 
 document.addEventListener("keydown", (e) => {
@@ -62,20 +119,6 @@ async function startGame() {
     playerId = playerInfo.id;
 
     localStorage.setItem("playerId", playerId);
-
-    //send list of first enemies
-
-    //INTERVAL
-    //CHANGE SENDING KEYS
-    /*setInterval(() => {
-        if (socket.readyState === WebSocket.OPEN) {
-            socket.send(JSON.stringify({
-                type: "input",
-                playerId,
-                keys
-            }));
-        }
-    }, 1000 / 20); // 20 times per second */
 
     setInterval(() => {
         if (socket.readyState === WebSocket.OPEN) {
@@ -102,19 +145,6 @@ socket.onmessage = async (event) => {
     let playerId = localStorage.getItem("playerId")
     const data = response;
 
-    //console.log(data)
-
-    //CHANGE TO TEST CURRENT POSITION
-    //response from server to input from client
-    /* if (data.type === "input") {
-        //movement
-        if (playerId !== data.values.playerId) {
-            secondPlayerCurrentPosition = data.values.keys;
-            //secondPlayerMovement(data.values.keys);
-        }
-        //here you are going to update the other player, NOT YOURSELF
-        //your own movement is being executed by game.js  */
-
     if (data.type === "input") {
         if (playerId != data.values.playerId) {
             //send the position values
@@ -127,7 +157,8 @@ socket.onmessage = async (event) => {
     //game over (from server)
     if (data.type === "gameOver") {
         //gameOver = true;
-        showGameOver.call(updateScene);
+        console.log(data.score);
+        showGameOver(data.score).call(updateScene);
     }
 
     if (data.type === "restartGame") {
@@ -253,10 +284,6 @@ function create() {
 
     spawnEnemy();//create the first enemy
 
-    /*for (let i = 0; i < 5; i++) {
-        spawnEnemy.call(this);
-    }*/
-
     cursors = this.input.keyboard.createCursorKeys();
 
     shootKey = this.input.keyboard.addKey(
@@ -284,17 +311,14 @@ function create() {
 }
 
 //PLAYER MOVEMENTS, EACH PLAYER MOVES THEMSELVES
-
 function moveToRight() {
     if (rightKey.isDown && player.x < 475) {
-        //if (player.x < 475) {
         player.x += 3;
     }
 }
 
 function moveToLeft() {
     if (leftKey.isDown && player.x > 25) {
-        //if (player.x > 25) {
         player.x -= 3;
     }
 }
@@ -308,27 +332,11 @@ function secondPlayerMovement(movement) {
 }
 
 function update() {
-
     updateScene = this; //new context
-
-    //TEST
-    //secondPlayerMovement(secondPlayerCurrentPosition);
     moveToLeft();
     moveToRight();
 
     if (gameOver) {
-
-
-
-        /*if (Phaser.Input.Keyboard.JustDown(enterKey) && socket.readyState === WebSocket.OPEN) {
-
-            console.log("ENTER PRESSED");
-
-            socket.send(JSON.stringify({
-                type: "restartGame"
-            }));
-        }*/
-
         if (clientVoted == true) {
             console.log("client voted from view");
             socket.send(JSON.stringify({
@@ -336,23 +344,12 @@ function update() {
             }));
             clientVoted = false;
         }
-
         return;
     }
 
 
 
     if (Phaser.Input.Keyboard.JustDown(shootKey)) {
-        /*const bullet =
-            this.add.rectangle(
-                player.x,
-                player.y - 30,
-                5,
-                15,
-                0xffff00
-            );
- 
-        bullets.push(bullet);*/
         shoot();
     }
 
@@ -374,7 +371,6 @@ function update() {
         if (enemies[i].y > 750) {
             enemies[i].destroy();
             enemies.splice(i, 1);
-            //spawnEnemy.call(this);
         }
     }
 
@@ -398,11 +394,12 @@ function update() {
                     score++;
                     scoreText.setText("Score: " + score + " A,D");
                 }
-                //spawnEnemy.call(this);
                 //for enemy explosion sound as broadcast
                 if (socket.readyState === WebSocket.OPEN) {
                     socket.send(JSON.stringify({
-                        type: "enemyHit"
+                        type: "enemyHit",
+                        playerId: bullet.owner,
+                        score
                     }));
                 }
                 break;
@@ -425,10 +422,6 @@ function update() {
                         score
                     }));
                 }
-
-                showGameOver.call(this);
-
-                //TEST BREAK KAROL
                 break;
             }
         }
@@ -459,26 +452,6 @@ function shoot() {
     }
 }
 
-/*
-function spawnEnemy() {
-    const enemy =
-        this.add.rectangle(
-            Phaser.Math.Between(
-                25,
-                475
-            ),
-            Phaser.Math.Between(
-                -500,
-                -50
-            ),
-            50,
-            50,
-            0xff0000
-        );
- 
-    enemies.push(enemy);
-}*/
-
 function isColliding(a, b) {
 
     return (
@@ -500,7 +473,7 @@ function isColliding(a, b) {
     );
 }
 
-function showGameOver() {
+function showGameOver(score) {
     if (gameOver) {
         return;
     }
@@ -520,33 +493,16 @@ function showGameOver() {
         color: "#ffffff",
         confirmButtonColor: "#1e90ff",
         html: `
-            <div style="height: 150px">
+            <div style="height: 200px">
                 <img width="350" src="../assets/explosion.PNG" />
+
+                <p>
+                    Score: ${score}
+                </p>
+
                 <!--<img height="150" src="https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/aebb45ff-108b-48c9-b5ff-7cfcacf68232/df10yp9-09aefc5b-31b0-40c9-8ae2-0f9818499813.gif?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiIvZi9hZWJiNDVmZi0xMDhiLTQ4YzktYjVmZi03Y2ZjYWNmNjgyMzIvZGYxMHlwOS0wOWFlZmM1Yi0zMWIwLTQwYzktOGFlMi0wZjk4MTg0OTk4MTMuZ2lmIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmZpbGUuZG93bmxvYWQiXX0.ED0-b6_K4EqrYuk-lkfcafU_x3l5CHsz73ouzVbWssU" />-->
             </div>`
     }).then((data) => { clientVoted = true; });
-
-    /*gameOverText =
-        this.add.text(
-            70,
-            300,
-            "THE ENEMIES WON",
-            {
-                fontSize: "36px",
-                color: "#ffffff"
-            }
-        );
-
-    restartText =
-        this.add.text(
-            70,
-            360,
-            "Press ENTER to restart",
-            {
-                fontSize: "28px",
-                color: "#ffffff"
-            }
-        );*/
 }
 
 function restart() {
@@ -575,19 +531,13 @@ function restart() {
     secondPlayer.x = 250;
     secondPlayer.y = 620;
 
-    /*for (let i = 0; i < 5; i++) {
-        spawnEnemy.call(this);
-    }*/
-
-    gameOverText.destroy();
-    restartText.destroy();
     spawnEnemy();
 }
 
 
 function showPlayerDisconnected() {
-    if (playerDisconnected)
-        return;
+    /*if (playerDisconnected)
+        return;*/
 
     playerDisconnected = true;
     gameOver = true;
@@ -603,37 +553,13 @@ function showPlayerDisconnected() {
     }
     bullets = [];
 
-    //animation for restart
-    Swal.fire({
-        title: "Player 2 left",
-        text: "The other player disconnected.",
-        icon: undefined,
-        confirmButtonText: "Return to lobby",
-        allowOutsideClick: false,
-        allowEscapeKey: false,
-        allowEnterKey: false,
-        background: "#1b2735",
-        color: "#ffffff",
-        confirmButtonColor: "#1e90ff",
-        html: `
-            <div style="height: 150px">
-             <p>
-                The match has ended because the other player left.
-            </p>
-            <img width="200" src="https://img.itch.zone/aW1hZ2UvMTgzOTY2MS8xMDgxMjIwNS5naWY=/original/DCgmR1.gif" />
-               
-            </div>`
-    }).then(() => {
-
-        //close ws
-        if (socket.readyState === WebSocket.OPEN) {
-            socket.close();
-        }
+    if (socket.readyState === WebSocket.OPEN) {
+        socket.close();
+    }
 
         //go back to lobby
-        window.location.href = "../lobby/lobby.html";
-
-    });
+        window.location.href = "/lobby";
+    //});
 }
 
 startGame();

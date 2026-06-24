@@ -3,7 +3,6 @@ let imgLoading = document.querySelector("#imgLoading");
 let txtStatus = document.querySelector("#txtStatus");
 let txtPlayerName = document.querySelector("#txtPlayerName");
 
-
 const BASE_URL = "http://localhost:3000/api/";
 
 btnStartGame.disabled = true;
@@ -12,11 +11,6 @@ btnStartGame.disabled = true;
 const socket = new WebSocket("ws://localhost:3000/ws");
 
 const userNameSpan = document.querySelector("#userNameSpan");
-
-/*intervalLoading = setInterval(() => {
-    console.log("waiting for player to join.");
-}, 1000);*/
-
 
 async function getUserLogged() {
     const response = await fetch(`${BASE_URL}me`, {
@@ -43,15 +37,10 @@ btnStartGame.addEventListener("click", () => {
     gameStarted();
 })
 
-
 //we receive
 socket.onmessage = async (event) => {
     //data
     const data = JSON.parse(event.data);
-    /*//display
-    console.log(`${data.type.toString()}`);*/
-
-
     //MAX LIMIT REACHED, we start the game
     if (data.type === "lobbyReady") {
         //stop the loading anim
@@ -94,14 +83,10 @@ socket.onmessage = async (event) => {
 
         console.log("REDIRECTING TO GAME");
         //both go at the same time to game screen
-        window.location.href = "/game";
+        //window.location.href = "/game";
+        window.location.href =`/game?token=${encodeURIComponent(data.token)}`;
     }
-
-    //player movement in real time
-
 }
-
-
 
 //close socket 
 socket.onclose = () => {
@@ -134,7 +119,6 @@ function sendMessage() {
             to: `${currentUserName}2`,
             text: "Player connected"
         }))
-
 
         //custom trigger
         socket.send(JSON.stringify({
