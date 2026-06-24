@@ -1,4 +1,4 @@
-const form = document.querySelector("#editProfileForm");
+/*const form = document.querySelector("#editProfileForm");
 
 form.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -12,40 +12,88 @@ form.addEventListener("submit", async (e) => {
     };
 
     console.log(updatedData);
-
-    /*
-    try {
-      // 1. Send data to the backend
-      // Replace with your actual API endpoint
-      const response = await fetch('/api/user/profile', {
-        method: 'PUT', // or PATCH
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updatedData)
-      });
-
-      if (!response.ok) throw new Error('Failed to update profile');
-
-      // 2. Update local state
-      state.name = updatedData.name;
-      state.bio = updatedData.bio;
-
-      // 3. Update DOM with the new state
-      displayElements.name.textContent = state.name;
-      displayElements.bio.textContent = state.bio;
-
-      // 4. Revert to view mode & show success
-      toggleEditMode(false);
-      statusMessage.textContent = "Profile updated successfully!";
-      statusMessage.style.color = "green";
-
-    } catch (error) {
-      console.error('Error updating profile:', error);
-      statusMessage.textContent = "Error saving changes. Please try again.";
-      statusMessage.style.color = "red";
-    }
-      */
+ 
   });
 
   function deleteAccount(){
     console.log("delete account");
+  }*/
+
+const form = document.querySelector("#editProfileForm");
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  try {
+    const formData = new FormData(form);
+
+    const updatedData = {
+      username: formData.get("username")?.trim(),
+      email: formData.get("email")?.trim(),
+      password: formData.get("password")?.trim()
+    };
+
+    // Eliminar campos vacíos
+    Object.keys(updatedData).forEach(key => {
+      if (!updatedData[key]) delete updatedData[key];
+    });
+
+    const token = localStorage.getItem("token");
+
+    const response = await fetch("http://localhost:3000/api/users/profile", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Credentials: `include`
+      },
+      body: JSON.stringify(updatedData)
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "Error al actualizar perfil");
+    }
+
+    alert("Perfil actualizado correctamente");
+    console.log(data);
+
+  } catch (error) {
+    console.error(error);
+    alert(error.message);
   }
+});
+
+async function deleteAccount() {
+  const confirmDelete = confirm(
+    "¿Estás seguro de eliminar tu cuenta? Esta acción no se puede deshacer."
+  );
+
+  if (!confirmDelete) return;
+
+  try {
+    const token = localStorage.getItem("token");
+
+    const response = await fetch("http://localhost:3000/api/users/profile", {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "Error al eliminar cuenta");
+    }
+
+    alert("Cuenta eliminada correctamente");
+
+    localStorage.removeItem("token");
+    window.location.href = "/login";
+
+  } catch (error) {
+    console.error(error);
+    alert(error.message);
+  }
+}
