@@ -18,6 +18,8 @@ let gameScores = [];
 
 let enemies = [];
 
+let permissionForScores = false;
+
 //GAME functions from server (enemies and bullets)
 
 function randomBetween(min, max) {
@@ -77,6 +79,9 @@ const initializeWebSocket = (server) => {
     //when user connects
     wss.on("connection", async (ws, req) => {
         console.log("socket io server started")
+        if(isGameStarted){
+            permissionForScores = true;
+        }
 
         //console.log(wss)
         //wss.clients.forEach((client) => console.log(client.Email))
@@ -246,7 +251,7 @@ const initializeWebSocket = (server) => {
                             }
 
                             //clean
-                            //gameScores = [];
+                            gameScores = [];
                             currentGameId = null;
                             gameFinished = true;
 
@@ -387,7 +392,7 @@ const initializeWebSocket = (server) => {
                             currentGameId = result.recordset[0].Id;
 
                             //clean scores
-                            //gameScores = [];
+                            gameScores = [];
                             gameFinished = false;
 
                             broadcast({
@@ -456,28 +461,28 @@ const initializeWebSocket = (server) => {
             }
             //when user disconnects
             ws.on("close", async () => {
-                console.log("Player disconnected");
+
+                console.log("CLOSE", ws.userId, new Date().toISOString());
+
                 console.log("player disconnected with: ", currentGameId)
                 console.log("NOW THE CLIENTS ARE: ", wss.clients.size);
 
-                if (currentGameId !== null) {
-                    console.log("no es null: ", currentGameId)
+                if (currentGameId !== null && permissionForScores == true) {
+                    console.log("the game ID: ", currentGameId)
 
-                    console.log(gameScores);
-
+                    //console.log(gameScores);
 
                     let currentPlayerScore = gameScores.filter((gameScore) => {
                         return gameScore.userId == ws.userId;
                     });
 
-                    console.log("current player score: ", currentPlayerScore);
+                    console.log("current disconnected player score: ", currentPlayerScore);
 
-                    //for (const player of gameScores) {
-                    //   if(player.userId == ws.userId){
-                    console.log("entra en el for")
-                    //console.log(player.userId, " - ", currentGameId)
-                    try {
-                        await msnodesqlv8.query(`
+                    for (const player of gameScores) {
+                     //   if(player.userId == ws.userId){
+                            //console.log(player.userId, " - ", currentGameId)
+                            try{
+                                await msnodesqlv8.query(`
                                 INSERT INTO Scores
                                 (
                                     UserId,
@@ -487,15 +492,16 @@ const initializeWebSocket = (server) => {
                                 )
                                 VALUES
                                 (
-                                    ${currentPlayerScore[0].userId},
+                                    ${player.userId},
                                     ${currentGameId},
-                                    ${currentPlayerScore[0].score},
+                                    ${player.score},
                                     GETDATE()
                                 )`);
-                    } catch (err) {
-                        console.error(err);
+                                console.log("SCORES REGISTERED FOR DISCONNECTION")
+                            }catch (err) {
+                                console.error(err);
+                            }
                     }
-                    //  }
                     //let myself = gameScores.filter((player) => player.userId === ws.userId)
                     //console.log("myself is ")
                     //}
@@ -509,12 +515,12 @@ const initializeWebSocket = (server) => {
 
                     //currentGameId = null;
                     gameFinished = true;
-                    //gameScores = [];
+                    gameScores = [];
                     restartVotes = [];
                     enemies = [];
-                    broadcast({
+                    /*broadcast({
                         type: "playerDisconnected"
-                    });
+                    });*/
 
                 }
 
