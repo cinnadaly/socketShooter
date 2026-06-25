@@ -66,7 +66,7 @@ const initializeWebSocket = (server) => {
 
     //when user connects
     wss.on("connection", async (ws, req) => {
-        console.log("socket io server started")
+        //console.log("socket io server started")
 
         //if(gameState.started){
             permissionForScores = true;
@@ -90,7 +90,7 @@ const initializeWebSocket = (server) => {
                     }
                 )
             }
-            console.log(`New connection established. Total: ${wss.clients.size}`);
+            //console.log(`New connection established. Total: ${wss.clients.size}`);
 
             //read cookies
             const cookies = cookie.parse(req.headers.cookie || "");
@@ -166,8 +166,8 @@ const initializeWebSocket = (server) => {
                     }
 
                     if (data.type === "gameOver") {
-                        console.log("GAME OVER");
-                        console.log("players quantity: ", gameState.players.length);
+                        //console.log("GAME OVER");
+                        //console.log("players quantity: ", gameState.players.length);
                         if (gameState.players.length === 2){
 
                             //verify if scores has been saved before
@@ -284,7 +284,11 @@ const initializeWebSocket = (server) => {
                     if (data.type === "gameStarted") {
                         console.log("HERE ARE THE PLAYERS IN LIST RIGHT NOW:");
                         console.log(gameState.players);
-                        //remove duplicated players
+
+
+                        /*ws.client
+
+
                         const alreadyExists = gameState.players.find(
                             p => p.userId === ws.userId
                         );
@@ -296,7 +300,21 @@ const initializeWebSocket = (server) => {
                                 username: ws.name,
                                 score: 0
                             });
-                        }
+                        }*/
+
+                        gameState.players = [];
+                        wss.clients.forEach(client => {
+                            if (!client.userId) return;
+
+                            gameState.players.push({
+                                userId: client.userId,
+                                username: client.name,
+                                score: 0
+                            });
+                        })
+
+                        console.log("[GAME STARTED] CURRENT GAME STARTED PLAYERS: ")
+                        console.log(gameState.players);
 
                         gameState.started = true;
                         gameState.finished = false;
@@ -331,7 +349,7 @@ const initializeWebSocket = (server) => {
 
                         if (player) {
                             player.score = data.score
-                            console.log(player);
+                            //console.log(player);
                         }
 
 
@@ -361,7 +379,7 @@ const initializeWebSocket = (server) => {
 
                         scoresSaved = false;
 
-                        console.log("gameSTATE FINISHED: ", gameState.finished);
+                        //console.log("gameSTATE FINISHED: ", gameState.finished);
                         if (!gameState.finished) {
                             console.log("Game not finished");
                             return;
@@ -386,10 +404,26 @@ const initializeWebSocket = (server) => {
 
                             gameState.gameId = result.recordset[0].Id;
 
-                            //clean current scores
+                            /*//clean current scores
                             gameState.players.forEach(player => {
                                 player.score = 0;
-                            });
+                            });*/
+
+                            gameState.players = [];
+
+                             wss.clients.forEach(client => {
+                                if (!client.userId) return;
+
+                                gameState.players.push({
+                                    userId: client.userId,
+                                    username: client.name,
+                                    score: 0
+                                });
+                            })
+
+                            console.log("[RESTART] CURRENT GAME STARTED PLAYERS: ")
+                            console.log(gameState.players);
+
                             gameState.finished = false;
 
                             broadcast({
