@@ -38,56 +38,78 @@ form.addEventListener("submit", async (e) => {
       if (!updatedData[key]) delete updatedData[key];
     });
 
-    const token = localStorage.getItem("token");
 
     const response = await fetch("http://localhost:3000/api/users/profile", {
       method: "PUT",
+      credentials: "include",
       headers: {
-        "Content-Type": "application/json",
-        Credentials: `include`
+        "Content-Type": "application/json"
       },
       body: JSON.stringify(updatedData)
     });
 
-    const data = await response.json();
+    //TEST
+    const text = await response.text();
+    console.log(text);
 
-    if (!response.ok) {
-      throw new Error(data.message || "Error al actualizar perfil");
+    let data;
+
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      throw new Error("Server did not return JSON");
     }
 
-    alert("Perfil actualizado correctamente");
+    if (!response.ok) {
+      throw new Error(data.message || "Error updating profile");
+    }
+
+    console.log("Profile updated succesfully");
     console.log(data);
+    //window.location.reload();
+
+    const meResponse = await fetch("http://localhost:3000/api/users/me", {
+      credentials: "include"
+    });
+
+
+    //window.location.reload();
+
+    const me = await meResponse.json();
+    console.log(me)
+    // actualizar UI
+    //document.querySelector("#username").value = me.username;
+    //document.querySelector("#email").value = me.email;
+
 
   } catch (error) {
     console.error(error);
-    alert(error.message);
+    //alert(error.message);
   }
 });
 
 async function deleteAccount() {
   const confirmDelete = confirm(
-    "¿Estás seguro de eliminar tu cuenta? Esta acción no se puede deshacer."
+    "Are you sure? this action cannot be undone"
   );
 
   if (!confirmDelete) return;
 
   try {
-    const token = localStorage.getItem("token");
 
     const response = await fetch("http://localhost:3000/api/users/profile", {
       method: "DELETE",
       headers: {
-        Authorization: `Bearer ${token}`
       }
     });
 
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.message || "Error al eliminar cuenta");
+      throw new Error(data.message || "Error deleting account");
     }
 
-    alert("Cuenta eliminada correctamente");
+    alert("Account deleted succesfully");
 
     localStorage.removeItem("token");
     window.location.href = "/login";
