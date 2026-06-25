@@ -20,14 +20,14 @@ router.get('/game', authMiddleware, (req, res) => {
 
     const token = req.query.token;
     console.log("token from routes: ", token);
-    console.log("Game state from routes: ", gameState);
+    //console.log("Game state from routes: ", gameState);
 
     const isPlayerInGame = gameState.players.some(
         player => player.userId === req.user.id
     );
 
     if (!gameState.started || !isPlayerInGame || token !== gameState.token) {
-        return res.redirect('/lobby');
+        //return res.redirect('/lobby');
     }
 
     // __dirname is the directory of the current script
