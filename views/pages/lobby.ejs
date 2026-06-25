@@ -4,10 +4,12 @@
 <head>
 
     <%- include('../partials/head'); %>
-    <link rel="stylesheet" href="./styles/lobby.css">
-    <title>Socket-shooter | Hobby</title>
+        <link rel="stylesheet" href="./styles/lobby.css">
+        <title>Socket-shooter | Hobby</title>
+        <link rel="icon" type="image/png" href="/assets/player.png">
 
 </head>
+
 <body class="bg-transparent">
 
     <header>
@@ -23,35 +25,38 @@
             <div class="container bg-transparent ">
                 <div class="card bg-none bg-transparent">
                     <div class="card-body bg-none bg-transparent">
-                            <div class="row d-flex justify-content-center ">
-                                <div class="col-5 st_client_name d-flex justify-content-center bg-none">
-                                    <span id="userNameSpan" data-username="<%= user.username %>"><%= user.username %></span>
-                                </div>
-                                <div class="col-5 nd_client_name d-flex justify-content-center bg-none">
-                                    <span id="txtPlayerName">Waiting for team</span>
-                                </div>
+                        <div class="row d-flex justify-content-center ">
+                            <div class="col-5 st_client_name d-flex justify-content-center bg-none">
+                                <span id="userNameSpan" data-username="<%= user.username %>">
+                                    <%= user.username %>
+                                </span>
                             </div>
-                            <div class="row d-flex justify-content-center ">
-                                <div class="col-5 st_client_status d-flex justify-content-center bg-none">Ready</div>
-                                <div class="col-5 nd_client_status d-flex justify-content-center bg-none">
-                                    <span class="txtStatus" id="txtStatus">Ready</span>
-                                    <div class="imgLoading" id="imgLoading"></div>
-                                </div>
+                            <div class="col-5 nd_client_name d-flex justify-content-center bg-none">
+                                <span id="txtPlayerName">Waiting for team</span>
                             </div>
-                            <div class="row d-flex justify-content-center ">
-                                <div class="col-10 d-flex justify-content-center">
-                                    <button id="btnStartGame" class="btn btn-primary mt-4 px-5 py-3" >START</button>
-                                </div>
+                        </div>
+                        <div class="row d-flex justify-content-center ">
+                            <div class="col-5 st_client_status d-flex justify-content-center bg-none">Ready</div>
+                            <div class="col-5 nd_client_status d-flex justify-content-center bg-none">
+                                <span class="txtStatus" id="txtStatus">Ready</span>
+                                <div class="imgLoading" id="imgLoading"></div>
+                            </div>
+                        </div>
+                        <div class="row d-flex justify-content-center ">
+                            <div class="col-10 d-flex justify-content-center">
+                                <button id="btnStartGame" class="btn btn-primary mt-4 px-5 py-3">START</button>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 
     <script src='//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js'></script>
 
     <script src="../service/webSocketLobby.js"></script>
 
 </body>
+
 </html>

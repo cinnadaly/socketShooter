@@ -55,7 +55,7 @@ function handleRouteChange() {
             type: "leaveGame"
         }));
         socket.close();
-    }else{
+    } else {
     }
     previousPath = currentPath;
 }
@@ -85,7 +85,7 @@ btnQuitGame.addEventListener("click", (e) => {
                
             </div>`
     }).then((result) => {
-        if(result.isConfirmed){
+        if (result.isConfirmed) {
 
 
             alert("player disconnected")
@@ -95,7 +95,7 @@ btnQuitGame.addEventListener("click", (e) => {
                 }));
             }
         }
-        if(result.isDismissed){
+        if (result.isDismissed) {
             console.log("continue the game")
         }
     });
@@ -172,13 +172,13 @@ socket.onmessage = async (event) => {
 
     //when server creates new enemy
     if (data.type === "spawnEnemy") {
-        const enemy = createScene.add.rectangle(
+        const enemy = createScene.add.image(
             data.newEnemy.x,
             data.newEnemy.y,
-            50,
-            50,
-            0xff0000
+            "enemy"
         );
+
+        enemy.setDisplaySize(50, 50);
 
         enemies.push(enemy);
     }
@@ -231,6 +231,7 @@ function preload() {
     this.load.audio("explosionSound", "assets/explosion.wav");
     this.load.image("player", "assets/player.PNG");
     this.load.image("secondPlayer", "assets/secondPlayer.PNG");
+    this.load.image("enemy", "assets/enemy2.PNG");
 }
 
 new Phaser.Game(config);
@@ -557,8 +558,8 @@ function showPlayerDisconnected() {
         socket.close();
     }
 
-        //go back to lobby
-        window.location.href = "/lobby";
+    //go back to lobby
+    window.location.href = "/lobby";
     //});
 }
 
