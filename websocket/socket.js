@@ -138,18 +138,7 @@ const initializeWebSocket = (server) => {
             ws.email = user.Email;
             ws.name = user.Username;
 
-            //remove duplicated players
-            const alreadyExists = gameState.players.find(
-                p => p.userId === ws.userId
-            );
-
-            if (!alreadyExists) {
-                gameState.players.push({
-                    userId: ws.userId,
-                    username: ws.name,
-                    score: 0
-                });
-            }
+            
 
             /*const currentUser = connectedUsers.filter((u) => {
                 //console.log(u.userId, " and ", ws.userId)
@@ -290,15 +279,33 @@ const initializeWebSocket = (server) => {
 
                     //when 1 player starts the game
                     //broadcast the redirect to all clients for /game
+                    
+
                     if (data.type === "gameStarted") {
+                        console.log("HERE ARE THE PLAYERS IN LIST RIGHT NOW:");
+                        console.log(gameState.players);
+                        //remove duplicated players
+                        const alreadyExists = gameState.players.find(
+                            p => p.userId === ws.userId
+                        );
+
+                        if (!alreadyExists) {
+                            console.log("here the player: ", ws.userId, " is restarting score from: with: 0");
+                            gameState.players.push({
+                                userId: ws.userId,
+                                username: ws.name,
+                                score: 0
+                            });
+                        }
+
                         gameState.started = true;
                         gameState.finished = false;
                         //unique token for current game 
                         gameState.token = randomUUID();
                         //restart the score for all players
-                        gameState.players.forEach(player => {
+                        /*gameState.players.forEach(player => {
                             player.score = 0;
-                        });
+                        });*/
                         //SAVE PARTIDA
                         const result = await msnodesqlv8.query`INSERT INTO Games (CreatedAt) 
                         OUTPUT INSERTED.Id
@@ -324,8 +331,10 @@ const initializeWebSocket = (server) => {
 
                         if (player) {
                             player.score = data.score
+                            console.log(player);
                         }
-                        console.log(player);
+
+
                         //for hit sound
                         broadcast(
                             {
@@ -446,9 +455,11 @@ const initializeWebSocket = (server) => {
                             enemies = [];
                             gameState.token = null;
 
-                            gameState.players = gameState.players.filter(
+                            /*gameState.players = gameState.players.filter(
                                 player => player.userId !== ws.userId
-                            );
+                            );*/
+
+                            gameState.players = []
 
                             console.log("---------------------------------------------------------------------")
                         }
