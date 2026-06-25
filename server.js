@@ -35,7 +35,7 @@ app.use('/', pageRoutes);
 
 //back
 app.use('/api/auth', authRoutes);
-app.use('/api', userRoutes);
+app.use('/api/users', userRoutes);
 
 //create node SERVER
 const server = http.createServer(app);

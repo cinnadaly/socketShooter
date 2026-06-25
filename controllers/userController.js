@@ -194,7 +194,86 @@ const createUser = async (user) => {
     `;
 };
 
+const updateProfile = async (req, res) => {
+    try {
 
+        const userId = req.user.id;
+
+        const {
+            username,
+            email,
+            password
+        } = req.body;
+
+        // construir update dinámico
+        let updates = [];
+
+        if (username) updates.push(`Username = '${username}'`);
+        if (email) updates.push(`Email = '${email}'`);
+
+        if (password) {
+            const hashedPassword = await bcrypt.hash(password, 10);
+            updates.push(`PasswordHash = '${hashedPassword}'`);
+        }
+
+        if (updates.length === 0) {
+            return res.status(400).json({
+                message: "No data to update"
+            });
+        }
+
+        const query = `
+            UPDATE Users
+            SET ${updates.join(", ")}
+            WHERE Id = ${userId}
+        `;
+
+        await msnodesqlv8.query(query);
+
+        res.json({
+            message: "Profile updated succesfully"
+        });
+
+    } catch (error) {
+        console.error(error);
+
+        res.status(500).json({
+            message: "Error updating profile"
+        });
+    }
+};
+
+const deleteProfile = async (req, res) => {
+    try {
+
+        const userId = req.user.id;
+
+        const response = await msnodesqlv8.query`
+            DELETE FROM Users
+            WHERE Id = ${userId}
+        `;
+
+        if (!response) {
+            return res.status(500).json({
+                status: 500,
+                message: "User could not be deleted"
+            });
+        }
+
+        res.status(200).json({
+            status: 200,
+            message: "Profile deleted successfully"
+        });
+
+    } catch (error) {
+        console.error(error);
+
+        res.status(500).json({
+            status: 500,
+            message: "Internal server error"
+        });
+    }
+};
 
 module.exports = {
     registerUser,
@@ -202,5 +281,7 @@ module.exports = {
     getUserById,
     deleteUser,
     createUser,
-    findByEmail
+    findByEmail,
+    updateProfile,
+    deleteProfile
 }
